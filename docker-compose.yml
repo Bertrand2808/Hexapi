@@ -12,6 +12,18 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
 
+  scanner:
+    image: sonarsource/sonar-scanner-cli
+    depends_on:
+      - sonarqube
+    volumes:
+      - .:/usr/src # ton code local monté dans le conteneur
+    working_dir: /usr/src
+    environment:
+      - SONAR_HOST_URL=http://sonarqube:9000
+      - SONAR_TOKEN=${SONAR_TOKEN}
+    entrypoint: ["sonar-scanner"]
+
 volumes:
   sonarqube_data:
   sonarqube_logs:

@@ -1,0 +1,6 @@
+projectKey=HexAPI
+serverUrl=http://sonarqube:9000
+serverVersion=25.3.0.104237
+dashboardUrl=http://sonarqube:9000/dashboard?id=HexAPI
+ceTaskId=2bac9e56-02ef-427c-a154-857cbf3965a1
+ceTaskUrl=http://sonarqube:9000/api/ce/task?id=2bac9e56-02ef-427c-a154-857cbf3965a1
