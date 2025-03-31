@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.13.2"
       - run: pip install -r requirements.txt
-      - run: pytest --cov=generator
+      - run: PYTHONPATH=. pytest --cov=generator
       - run: flake8
       - run: black --check .
 
