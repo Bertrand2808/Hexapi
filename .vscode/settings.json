@@ -1,0 +1,5 @@
+{
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.analysis.extraPaths": ["generator"]
+}
+

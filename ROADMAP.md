@@ -14,7 +14,7 @@ Cette roadmap décrit les étapes de développement prévues pour le générateu
 ---
 
 ## 🚧 Phase 2 : Générateur d'entité (en cours)
-- [ ] Interface utilisateur (CLI/GUI) pour créer une classe Entity
+- [X] Interface utilisateur (CLI/GUI) pour créer une classe Entity
 - [ ] Choix des champs, types, annotations
 - [ ] Génération du fichier `.java` avec :
   - Javadoc auto

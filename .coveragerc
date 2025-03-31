@@ -1,0 +1,3 @@
+[run]
+source = generator
+relative_files = True

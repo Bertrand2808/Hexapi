@@ -6,3 +6,6 @@ mypy
 pytest
 pytest-cov
 pre-commit
+faker
+pytest
+pytest-cov

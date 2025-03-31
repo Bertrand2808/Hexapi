@@ -1,0 +1,51 @@
+import json
+import os
+
+from generator.core.naming import to_camel_case, to_kebab_case, to_pascal_case
+
+
+def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
+    """
+    Prend le nom brut de l'entité et la liste des widgets de champ,
+    retourne le dictionnaire JSON à écrire.
+    """
+    entity_pascal = to_pascal_case(entity_name)
+    entity_camel = to_camel_case(entity_name)
+    entity_kebab = to_kebab_case(entity_name)
+
+    result = {
+        "Table": entity_pascal,
+        "table": entity_camel,
+        "camelTable": entity_camel,
+        "endpoint": entity_kebab,
+        "fields": [],
+    }
+
+    for name_entry, type_combobox, comment_entry, test_entry, _ in fields_raw:
+        name = to_camel_case(name_entry.get())
+        typ = type_combobox.get().strip()
+        comment = comment_entry.get().strip()
+        test_val = test_entry.get().strip()
+
+        if not name:
+            continue
+
+        result["fields"].append(
+            {
+                "nom": name,
+                "type": typ,
+                "isId": False,
+                "comment": comment,
+                "testValue": test_val,
+            }
+        )
+
+    return result
+
+
+def save_entity_json(entity_name: str, data: dict, output_dir="output") -> str:
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, f"{entity_name}.json")
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+    return filepath

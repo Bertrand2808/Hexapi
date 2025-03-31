@@ -18,6 +18,7 @@ services:
       - sonarqube
     volumes:
       - .:/usr/src # ton code local monté dans le conteneur
+      - ./.git:/usr/src/.git
     working_dir: /usr/src
     environment:
       - SONAR_HOST_URL=http://sonarqube:9000
