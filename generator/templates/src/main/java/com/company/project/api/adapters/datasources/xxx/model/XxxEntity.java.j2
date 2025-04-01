@@ -1,0 +1,33 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+{% set has_time = fields | selectattr('type', 'in', ['ZonedDateTime', 'LocalDateTime', 'LocalDate']) | list %}
+{% if has_time %}import java.time.*;{% endif %}
+
+/**
+ * {{ Table }} entity mapping the database table.
+ */
+@Entity
+@Table(name = "{{ table }}")
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
+@Getter
+@Setter
+public class {{ Table }}Entity {
+
+{% for field in fields %}
+    {% if field.isId %}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    {% endif %}
+    @Column(name = "{{ field.nom | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = false)
+    // comment: {{ field.comment }}
+    // testValue: {{ field.testValue }}
+    {% if field.isId %}@ToString.Include{% endif %}
+    private {{ field.type }} {{ field.nom }};
+
+{% endfor %}
+    public {{ Table }}Entity() {}
+}

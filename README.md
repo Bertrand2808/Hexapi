@@ -67,3 +67,4 @@ Une configuration est prête dans `.github/workflows/python.yml` pour permettre 
 📘 Une documentation complète est disponible dans [`docs/sonar.md`](docs/sonar.md)
 
 ---
+

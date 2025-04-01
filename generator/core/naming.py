@@ -27,3 +27,19 @@ def to_kebab_case(s: str) -> str:
     s = clean_string(s)
     kebab = re.sub(r"(?<!^)(?=[A-Z])", "-", s).lower()
     return kebab + "s"  # Pluralisation naïve
+
+
+def generate_name_variants(name: str) -> dict:
+    """
+    Génère plusieurs formats à partir d’un nom brut.
+    """
+    s = clean_string(name)
+    pascal = to_pascal_case(s)
+    camel = to_camel_case(s)
+    lower = s.lower().replace(" ", "")
+    return {
+        "original": s,
+        "PascalCase": pascal,
+        "camelCase": camel,
+        "lowercase": lower,
+    }

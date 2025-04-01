@@ -1,6 +1,6 @@
 __pycache__/
-.env
+#.env
 *.pyc
 scripts_ignored/
-admin.md
+#admin.md
 output/

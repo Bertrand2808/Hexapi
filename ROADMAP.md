@@ -57,3 +57,24 @@ Cette roadmap décrit les étapes de développement prévues pour le générateu
 ---
 
 > ✨ Contributions bienvenues ! Voir `CONTRIBUTING.md`
+
+# Idées d'ajouts :
+💡 À prévoir pour enrichir le menu plus tard :
+🔐 Fichier
+Exporter la classe Java directement
+
+Importer un JSON généré
+
+Récent > liste des projets ouverts récemment
+
+🧠 Aide
+Tutoriel pas à pas
+
+Lien vers les versions / changelog
+
+Feedback utilisateur
+
+⚙️ Outils
+Générer une entité DTO, Mapper, ou Service
+
+Personnaliser les noms de champs (suffixes, préfixes)

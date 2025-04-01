@@ -9,3 +9,4 @@ pre-commit
 faker
 pytest
 pytest-cov
+jinja2
