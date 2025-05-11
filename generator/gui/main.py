@@ -4,11 +4,11 @@
 import tkinter as tk
 from tkinter import ttk
 
-from generator.core.class_generator import render_template_to_output
 from generator.core.generator import build_entity_data, save_entity_json
 from generator.core.naming import generate_name_variants
 from generator.gui.menubar import create_menu_bar
 from generator.gui.widgets import add_field, create_scrollable_fields_frame
+from generator.scripts.generate_entity import generate_all_templates
 
 BG_DARK = "#1e1e2f"
 FONT_FAMILY = "Segoe UI"
@@ -95,8 +95,8 @@ def make_label(parent, text):
     )
 
 
-def setup_main_interface(root):
-    """Construit l’interface utilisateur principale : formulaires, champs et boutons."""
+def setup_main_interface(root, dev_mode=False):
+    """Construit l'interface utilisateur principale : formulaires, champs et boutons."""
 
     fields = []
 
@@ -105,7 +105,7 @@ def setup_main_interface(root):
 
     title_label = tk.Label(
         main_frame,
-        text="Créateur de classe Entity",
+        text="Créateur de classes HexAPI",
         font=("Helvetica Neue", 18, "bold"),
         fg="white",
         bg=main_frame["bg"],
@@ -178,13 +178,7 @@ def setup_main_interface(root):
         filepath = save_entity_json(entity_name, data)
         print(f"[OK] Json was generated in : {filepath}")
 
-        render_template_to_output(
-            json_path=filepath,
-            template_path=(
-                "generator/templates/src/main/java/com/company/project/api/adapters/"
-                "datasources/xxx/model/XxxEntity.java.j2"
-            ),
-        )
+        generate_all_templates(json_path=filepath)
 
     add_field_button = ttk.Button(
         main_frame, text="Ajouter un champ", command=handle_add_field
@@ -199,13 +193,56 @@ def setup_main_interface(root):
     )
     generate_button.pack(pady=(10, 0), anchor="center")
 
+    if dev_mode:
+        dev_button = ttk.Button(
+            main_frame,
+            text="Pré-remplir pour test 🧪",
+            command=lambda: auto_fill_fields(
+                company_entry,
+                project_entry,
+                entity_name_entry,
+                fields,
+                handle_add_field,
+            ),
+        )
+        dev_button.pack(pady=(5, 0), anchor="w")
+
+
+def auto_fill_fields(
+    company_entry, project_entry, entity_name_entry, fields, handle_add_field
+):
+    """Préremplit les champs pour les tests en dev."""
+    company_entry.delete(0, tk.END)
+    company_entry.insert(0, "TestDemonEntreprise")
+
+    project_entry.delete(0, tk.END)
+    project_entry.insert(0, "MonSuperProjet")
+
+    entity_name_entry.delete(0, tk.END)
+    entity_name_entry.insert(0, "User")
+
+    exemples = [
+        ("id", "Long", "id de l'utilisateur", "42", True),
+        ("name", "String", "nom complet", "Toto Bidule", False),
+        ("mail", "String", "email principal", "toto@hexapi.dev", False),
+    ]
+
+    for nom, type_, comment, test_value, is_id_value in exemples:
+        handle_add_field()
+        name_entry, type_combobox, comment_entry, test_entry, is_id, _ = fields[-1]
+        name_entry.insert(0, nom)
+        type_combobox.set(type_)
+        comment_entry.insert(0, comment)
+        test_entry.insert(0, test_value)
+        is_id.set(is_id_value)
+
 
 def main():
-    """Point d’entrée principal de l’interface :
+    """Point d'entrée principal de l'interface :
     initialise la fenêtre et les composants."""
 
     root = create_main_window()
     apply_style(root)
-    setup_main_interface(root)
+    setup_main_interface(root, dev_mode=True)
     create_menu_bar(root)
     root.mainloop()

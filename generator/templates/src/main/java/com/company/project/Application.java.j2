@@ -1,0 +1,14 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }};
+
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.annotations.QuarkusMain;
+
+/**
+ * Point d'entrée principal de l'application {{ project.original }} générée par HexAPI.
+ */
+@QuarkusMain
+public class Application {
+    public static void main(String... args) {
+        Quarkus.run(args);
+    }
+}

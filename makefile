@@ -11,4 +11,4 @@ down:
 	docker compose down
 
 coverage:
-	PYTHONPATH=. pytest --cov=generator --cov-report=xml --cov-report=html --cov-config=.coveragerc
+	set PYTHONPATH=.;%PYTHONPATH% && pytest --cov=generator --cov-report=xml --cov-report=html --cov-config=.coveragerc

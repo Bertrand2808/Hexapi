@@ -1,0 +1,47 @@
+package com.{{company.lowercase}}.{{project.lowercase}}.api.adapters.rest.controllers.{{table}};
+
+import com.{{company.lowercase}}.{{project.lowercase}}.api.adapters.rest.controllers.{{table}}.model.{{Table}}Entity;
+import com.{{company.lowercase}}.{{project.lowercase}}.api.application.{{table}}.model.{{Table}};
+import jakarta.annotation.Nullable;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * A class to map between controller and application scopes
+ */
+public final class {{Table}}Mapper {
+
+    private {{Table}}Mapper() {}
+
+    /**
+     * Maps a List of {{Table}} to a list of {{Table}}Schema
+     * @param {{table}} application scope
+     * @return controller scope
+     */
+    public static {{Table}}Schema of({{Table}} {{table}}) {
+        return new {{Table}}Schema({% for f in fields %}{{table}}.get{{f.nom | capitalize}}(){{ "," if not loop.last else "" }}{% endfor %});
+    }
+
+    /**
+     * Maps a {{Table}}Schema to a {{Table}}
+     * @param {{table}}Schema controller scope
+     * @return application scope
+     */
+    public static @Nullable {{Table}} of(@Nullable {{Table}}Schema {{table}}Schema) {
+        if ({{table}}Schema == null) {
+            return null;
+        }
+
+        return new {{Table}}({% for f in fields %}{{table}}Schema.get{{f.nom | capitalize}}(){{ "," if not loop.last else "" }}{% endfor %});
+    }
+
+    /**
+     * Maps a List of {{Table}} to a list of {{Table}}Schema
+     * @param {{table}} controller scope
+     * @return application scope
+     */
+    public static List<{{Table}}Schema> listOf(Collection<{{Table}}> {{table}}s) {
+        return {{table}}s.stream().map({{Table}}Mapper::of).toList();
+    }
+}

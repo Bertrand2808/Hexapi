@@ -1,0 +1,41 @@
+package com.{{company.lowercase}}.{{project.lowercase}}.api.adapters.datasources.{{table}};
+
+import com.{{company.lowercase}}.{{project.lowercase}}.api.adapters.datasources.{{table}}.model.{{Table}}Entity;
+import com.{{company.lowercase}}.{{project.lowercase}}.api.application.{{table}}.model.{{Table}};
+import jakarta.annotation.Nullable;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Mapper entre les entités de base de données et les objets métiers.
+ */
+final class {{Table}}Mapper {
+
+    private {{Table}}Mapper() {}
+
+    /**
+     * Transforme un objet métier ({{Table}}) en entité persistable ({{Table}}Entity)
+     */
+    public static {{Table}}Entity of({{Table}} {{table}}) {
+        return new {{Table}}Entity({% for f in fields %}{{table}}.get{{f.nom | capitalize}}(){{ "," if not loop.last else "" }}{% endfor %});
+    }
+
+    /**
+     * Transforme une entité ({{Table}}Entity) en objet métier ({{Table}})
+     */
+    public static @Nullable {{Table}} of(@Nullable {{Table}}Entity {{table}}Entity) {
+        if ({{table}}Entity == null) {
+            return null;
+        }
+
+        return new {{Table}}({% for f in fields %}{{table}}Entity.get{{f.nom | capitalize}}(){{ "," if not loop.last else "" }}{% endfor %});
+    }
+
+    /**
+     * Transforme une liste d'entités en liste d'objets métiers.
+     */
+    public static List<{{Table}}> listOf(Collection<{{Table}}Entity> {{table}}Entities) {
+        return {{table}}Entities.stream().map({{Table}}Mapper::of).toList();
+    }
+}

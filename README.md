@@ -11,7 +11,10 @@ Un générateur d'API Java hexagonale basé sur des entités définies par l'uti
 
 ## Utilisation
 
-À venir.
+```bash
+.\.venv\Scripts\activate
+python generator.py
+```
 
 ## 🔍 Analyse SonarQube
 
@@ -67,4 +70,3 @@ Une configuration est prête dans `.github/workflows/python.yml` pour permettre 
 📘 Une documentation complète est disponible dans [`docs/sonar.md`](docs/sonar.md)
 
 ---
-

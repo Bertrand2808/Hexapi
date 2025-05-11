@@ -52,6 +52,7 @@ def add_field(parent_frame, index=None):
     ]
     selected_type = tk.StringVar(value=type_options[0])
     test_value = tk.StringVar(value=get_fake_value(selected_type.get()))
+    is_id = tk.BooleanVar(value=False)
 
     name_label = tk.Label(
         content,
@@ -104,6 +105,11 @@ def add_field(parent_frame, index=None):
     test_entry = ttk.Entry(content, textvariable=test_value, width=20)
     test_entry.grid(row=1, column=3)
 
+    id_checkbox = ttk.Checkbutton(
+        content, text="ID", variable=is_id, style="Custom.TCheckbutton"
+    )
+    id_checkbox.grid(row=1, column=4, padx=(15, 0))
+
     def update_test_value(_varname=None, _index=None, _mode=None):
         test_value.set(get_fake_value(selected_type.get()))
 
@@ -114,14 +120,14 @@ def add_field(parent_frame, index=None):
         if isinstance(parent_frame, ScrollableFieldsFrame):
             fields_list = parent_frame.get_fields_list()
             fields_list.remove(
-                (name_entry, type_combobox, comment_entry, test_entry, row)
+                (name_entry, type_combobox, comment_entry, test_entry, is_id, row)
             )
             parent_frame.set_fields_list(fields_list)
 
     delete_button = ttk.Button(content, text="🗑", width=3, command=remove_row)
-    delete_button.grid(row=1, column=4, padx=(15, 0))
+    delete_button.grid(row=1, column=5, padx=(15, 0))
 
-    return name_entry, type_combobox, comment_entry, test_entry, row
+    return name_entry, type_combobox, comment_entry, test_entry, is_id, row
 
 
 class ScrollableFieldsFrame(tk.Frame):

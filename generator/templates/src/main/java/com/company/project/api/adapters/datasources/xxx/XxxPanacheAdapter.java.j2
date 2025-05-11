@@ -1,0 +1,93 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }};
+
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.model.{{ Table }}Entity;
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.{{ Table }}DatasourcePort;
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }};
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Datasource adapter encapsulant Panache pour {{ Table }}.
+ */
+@ApplicationScoped
+@Slf4j
+class {{ Table }}PanacheAdapter implements PanacheRepository<{{ Table }}Entity>, {{ Table }}DatasourcePort {
+
+    private static final String ID_EQUALS_ID = "{{ fields[0].nom }}=:{{ fields[0].nom }}";
+
+    /**
+     * Persiste un {{ table }} et retourne le {{ table }} persisté.
+     * @param {{ table }} le {{ table }} à persister
+     * @return le {{ table }} persisté
+     */
+    @Override
+    public {{ Table }} persist({{ Table }} {{ table }}) {
+        LOG.debug("Persist {{ table }} {}", {{ table }});
+        var entity = {{ Table }}Mapper.of({{ table }});
+        persist(entity);
+        return {{ Table }}Mapper.of(entity);
+    }
+
+    /**
+     * Met à jour un {{ table }} existant.
+     * @param {{ fields[0].nom }} l'identifiant du {{ table }} à mettre à jour
+     * @param {{ table }} le {{ table }} à mettre à jour
+     */
+    @Override
+    public void update({{ fields[0].type }} {{ fields[0].nom }}, {{ Table }} {{ table }}) {
+        LOG.debug("Update {{ table }} {}", {{ table }});
+        var entity = find(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ fields[0].nom }})).firstResult();
+        boolean modification = false;
+        {%- for f in fields if not f.isId %}
+        if (!{{ table }}.{{ f.nom }}().equals(entity.get{{ f.nom|capitalize }}())) {
+            entity.set{{ f.nom|capitalize }}({{ table }}.{{ f.nom }}());
+            modification = true;
+        }
+        {%- endfor %}
+        if (modification) {
+            LOG.debug("Entity updated: {}", entity);
+            persist(entity);
+        }
+    }
+
+    /**
+     * Récupère tous les {{ table }}s.
+     * @return la liste des {{ table }}s
+     */
+    @Override
+    public List<{{ Table }}> getAll() {
+        var list = {{ Table }}Mapper.listOf(findAll().list());
+        LOG.debug("Found {} {{ table }}s", list.size());
+        return list;
+    }
+
+    /**
+     * Récupère un {{ table }} par son identifiant.
+     * @param {{ fields[0].nom }} l'identifiant du {{ table }}
+     * @return le {{ table }} trouvé, ou null si non trouvé
+     */
+    @Override
+    public @Nullable {{ Table }} getBy{{ fields[0].nom|capitalize }}({{ fields[0].type }} {{ fields[0].nom }}) {
+        var result = {{ Table }}Mapper.of(
+            find(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ fields[0].nom }})).firstResult()
+        );
+        LOG.debug("Found {{ table }}: {}", result);
+        return result;
+    }
+
+    /**
+     * Supprime un {{ table }} par son identifiant.
+     * @param {{ table }} le {{ table }} à supprimer
+     * @return le nombre de lignes supprimées
+     */
+    @Override
+    public long delete({{ Table }} {{ table }}) {
+        var deleted = delete(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ table }}.{{ fields[0].nom }}()));
+        LOG.debug("Deleted {} row(s) for {{ table }} {}", deleted, {{ table }}.{{ fields[0].nom }}());
+        return deleted;
+    }
+}

@@ -1,0 +1,67 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.rest.controllers.{{ table }};
+
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }};
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.ports.in.{{ Table }}UseCase;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST controller for managing {{ Table }} resources.
+ */
+@RestController
+@RequestMapping("/api/{{ endpoint }}")
+public class {{ Table }}Controller {
+
+    private final {{ Table }}UseCase {{ table }}UseCase;
+
+    public {{ Table }}Controller({{ Table }}UseCase {{ table }}UseCase) {
+        this.{{ table }}UseCase = {{ table }}UseCase;
+    }
+
+    /**
+     * Get all {{ Table }} resources.
+     *
+     * @return a list of {{ Table }} resources
+     */
+    @GetMapping
+    public List<{{ Table }}> getAll() {
+        return {{ table }}UseCase.findAll();
+    }
+
+    /**
+     * Get a {{ Table }} resource by its ID.
+     *
+     * @param id the ID of the {{ Table }} resource to retrieve
+     * @return the {{ Table }} resource with the specified ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<{{ Table }}> getById(@PathVariable Long id) {
+        return ResponseEntity.of({{ table }}UseCase.findById(id));
+    }
+
+    /**
+     * Create a new {{ Table }} resource.
+     *
+     * @param input the {{ Table }} resource to create
+     * @return the created {{ Table }} resource
+     */
+    @PostMapping
+    public {{ Table }} create(@RequestBody @Valid {{ Table }} input) {
+        return {{ table }}UseCase.save(input);
+    }
+
+    /**
+     * Delete a {{ Table }} resource by its ID.
+     *
+     * @param id the ID of the {{ Table }} resource to delete
+     * @return a response entity with no content
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        {{ table }}UseCase.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

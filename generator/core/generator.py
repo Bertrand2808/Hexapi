@@ -12,20 +12,25 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
     entity_pascal = to_pascal_case(entity_name)
     entity_camel = to_camel_case(entity_name)
     entity_kebab = to_kebab_case(entity_name)
+    table_plural = entity_camel + "s"
+    capital_table_plural = table_plural.capitalize()
 
     result = {
         "Table": entity_pascal,
         "table": entity_camel,
+        "tables": table_plural,
+        "capitalTables": capital_table_plural,
         "camelTable": entity_camel,
         "endpoint": entity_kebab,
         "fields": [],
     }
 
-    for name_entry, type_combobox, comment_entry, test_entry, _ in fields_raw:
+    for name_entry, type_combobox, comment_entry, test_entry, is_id, _ in fields_raw:
         name = to_camel_case(name_entry.get())
         typ = type_combobox.get().strip()
         comment = comment_entry.get().strip()
         test_val = test_entry.get().strip()
+        is_id_value = is_id.get()
 
         if not name:
             continue
@@ -34,7 +39,7 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
             {
                 "nom": name,
                 "type": typ,
-                "isId": False,
+                "isId": is_id_value,
                 "comment": comment,
                 "testValue": test_val,
             }

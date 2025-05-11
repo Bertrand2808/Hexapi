@@ -1,0 +1,27 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model;
+
+import lombok.*;
+
+{% set has_time = fields | selectattr('type', 'in', ['ZonedDateTime', 'LocalDateTime', 'LocalDate']) | list %}
+{% if has_time %}import java.time.*;{% endif %}
+
+/**
+ * {{ Table }} est la classe métier représentant une entité {{ table }}.
+ */
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class {{ Table }} {
+
+{% for field in fields %}
+    /**
+     * {{ field.comment }}
+     */
+    {% if field.isId %}@ToString.Include{% endif %}
+    private {{ field.type }} {{ field.nom }};
+
+{% endfor %}
+}

@@ -24,7 +24,7 @@ def render_template_to_output(
     company = data["company"]["lowercase"]
     project = data["project"]["lowercase"]
     table = data["table"]
-    class_name = data["Table"] + "Entity"
+    Table = data["Table"]
 
     template_rel_path = template_path.replace("generator/templates/", "")
 
@@ -37,13 +37,14 @@ def render_template_to_output(
         template_rel_path.replace("company", company)
         .replace("project", project)
         .replace("xxx", table)
-        .replace("XxxEntity", class_name)
+        .replace("Xxx", Table)
     )
 
     if dynamic_path.endswith(".j2"):
         dynamic_path = dynamic_path[:-3]
 
-    output_path = os.path.join(output_root, dynamic_path)
+    # Créer le chemin de sortie avec company/project comme préfixe
+    output_path = os.path.join(output_root, company, project, dynamic_path)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     env = Environment(
@@ -55,8 +56,9 @@ def render_template_to_output(
         r"(?<!^)(?=[A-Z])", "_", s
     ).lower()
 
-    template_rel_path = template_path.replace("generator/templates/", "")
-    template = env.get_template(template_rel_path)
+    template_path_in_templates = template_path.replace("generator/templates/", "")
+    template = env.get_template(template_path_in_templates)
+    print(template_path_in_templates)
 
     rendered = template.render(**data)
 

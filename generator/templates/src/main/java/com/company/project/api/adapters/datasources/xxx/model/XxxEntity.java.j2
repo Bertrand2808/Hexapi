@@ -23,9 +23,11 @@ public class {{ Table }}Entity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     {% endif %}
     @Column(name = "{{ field.nom | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = false)
+    {% if field.isId %}
+    @ToString.Include
+    {% endif %}
     // comment: {{ field.comment }}
     // testValue: {{ field.testValue }}
-    {% if field.isId %}@ToString.Include{% endif %}
     private {{ field.type }} {{ field.nom }};
 
 {% endfor %}

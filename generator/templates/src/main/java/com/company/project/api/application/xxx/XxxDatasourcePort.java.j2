@@ -1,0 +1,51 @@
+package com.odigo.annuaireservice.api.application.{{package}};
+
+import com.odigo.annuaireservice.api.application.{{package}}.model.{{Table}};
+import jakarta.annotation.Nullable;
+import java.util.List;
+
+/**
+ * Port representing the possible actions concerning a {{Table}} resource.
+ */
+public interface {{Table}}DatasourcePort {
+
+    /**
+     * Retrieve all the {{tables}}
+     *
+     * @return a List of {{Table}}
+     */
+    List<{{Table}}> getAll();
+
+    /**
+     * Retrieve a {{table}} by its {{id}}
+     *
+     * @param {{id}} the {{id}} of the {{table}}
+     * @return the {{table}}
+     */
+    @Nullable
+    {{Table}} getBy{{ fields[0].name | capitalize }}({{ fields[0].type }} {{id}});
+
+    /**
+     * Create a new {{table}}
+     *
+     * @param {{table}} the {{table}} to create
+     * @return the created {{table}}
+     */
+    {{Table}} persist({{Table}} {{table}});
+
+    /**
+     * Update a {{table}}
+     *
+     * @param {{id}} ?!
+     * @param {{table}} ?!
+     */
+    void update({{ fields[0].type }} {{id}}, {{Table}} {{table}});
+
+    /**
+     * Delete a {{table}} by its {{id}}
+     *
+     * @param {{table}} the {{id}} of the {{table}} to delete
+     * @return number of deleted record (0/1)
+     */
+    long delete({{Table}} {{table}});
+}

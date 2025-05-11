@@ -1,0 +1,85 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }};
+
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }};
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }}Schema;
+import com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.{{ Table }}Repository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Service gérant la logique métier pour {{ Table }}.
+ */
+@Service
+@RequiredArgsConstructor
+public class {{ Table }}Service {
+
+    private final {{ Table }}Repository {{ table }}Repository;
+
+    /**
+     * Récupère tous les {{ table }}s.
+     *
+     * @return la liste de tous les {{ table }}s
+     */
+    public List<{{ Table }}> findAll() {
+        return {{ table }}Repository.findAll();
+    }
+
+    /**
+     * Récupère un {{ table }} par son identifiant.
+     *
+     * @param id l'identifiant du {{ table }}
+     * @return le {{ table }} trouvé, ou empty si non trouvé
+     */
+    public Optional<{{ Table }}> findById(Long id) {
+        return {{ table }}Repository.findById(id);
+    }
+
+    /**
+     * Crée un nouveau {{ table }}.
+     *
+     * @param schema le schéma de validation du {{ table }}
+     * @return le {{ table }} créé
+     */
+    @Transactional
+    public {{ Table }} create({{ Table }}Schema schema) {
+        {{ Table }} {{ table }} = schema.toDomain();
+        return {{ table }}Repository.save({{ table }});
+    }
+
+    /**
+     * Met à jour un {{ table }} existant.
+     *
+     * @param id l'identifiant du {{ table }} à mettre à jour
+     * @param schema le schéma de validation avec les nouvelles valeurs
+     * @return le {{ table }} mis à jour, ou empty si non trouvé
+     */
+    @Transactional
+    public Optional<{{ Table }}> update(Long id, {{ Table }}Schema schema) {
+        return {{ table }}Repository.findById(id)
+            .map(existing{{ Table }} -> {
+                {{ Table }} updated{{ Table }} = schema.toDomain();
+                updated{{ Table }}.setId(id);
+                return {{ table }}Repository.save(updated{{ Table }});
+            });
+    }
+
+    /**
+     * Supprime un {{ table }}.
+     *
+     * @param id l'identifiant du {{ table }} à supprimer
+     * @return true si le {{ table }} a été supprimé, false sinon
+     */
+    @Transactional
+    public boolean delete(Long id) {
+        return {{ table }}Repository.findById(id)
+            .map({{ table }} -> {
+                {{ table }}Repository.delete({{ table }});
+                return true;
+            })
+            .orElse(false);
+    }
+}

@@ -1,0 +1,52 @@
+package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.rest.controllers.{{ table }}.model;
+
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+{% set has_time = fields | selectattr('type', 'in', ['ZonedDateTime', 'LocalDateTime', 'LocalDate']) | list %}
+{% if has_time %}import java.time.*;{% endif %}
+
+/**
+ * Schéma de validation pour {{ Table }}.
+ * Cette classe est utilisée pour la validation des données d'entrée.
+ */
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class {{ Table }}Schema {
+
+{% for field in fields %}
+    {% if not field.isId %}
+    /**
+     * {{ field.comment }}
+     */
+    {% if field.type == 'String' %}
+    @NotBlank(message = "Le champ {{ field.nom }} ne peut pas être vide")
+    {% if field.nom == 'mail' or field.nom == 'email' %}
+    @Email(message = "Le format de l'email n'est pas valide")
+    {% endif %}
+    {% elif field.type == 'Integer' or field.type == 'Long' %}
+    @NotNull(message = "Le champ {{ field.nom }} ne peut pas être null")
+    @Min(value = 0, message = "Le champ {{ field.nom }} doit être positif")
+    {% elif field.type == 'ZonedDateTime' or field.type == 'LocalDateTime' or field.type == 'LocalDate' %}
+    @NotNull(message = "Le champ {{ field.nom }} ne peut pas être null")
+    {% endif %}
+    private {{ field.type }} {{ field.nom }};
+
+    {% endif %}
+{% endfor %}
+
+    /**
+     * Convertit le schéma en objet métier.
+     */
+    public {{ Table }} toDomain() {
+        return new {{ Table }}(
+            {% for field in fields %}
+            this.get{{ field.nom | capitalize }}(){{ "," if not loop.last else "" }}
+            {% endfor %}
+        );
+    }
+}
