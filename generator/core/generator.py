@@ -25,12 +25,21 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
         "fields": [],
     }
 
-    for name_entry, type_combobox, comment_entry, test_entry, is_id, _ in fields_raw:
+    for (
+        name_entry,
+        type_combobox,
+        comment_entry,
+        test_entry,
+        is_id,
+        nullable_checkbox,
+        _,
+    ) in fields_raw:
         name = to_camel_case(name_entry.get())
         typ = type_combobox.get().strip()
         comment = comment_entry.get().strip()
         test_val = test_entry.get().strip()
         is_id_value = is_id.get()
+        nullable = nullable_checkbox.get()
 
         if not name:
             continue
@@ -40,6 +49,7 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
                 "nom": name,
                 "type": typ,
                 "isId": is_id_value,
+                "nullable": nullable,
                 "comment": comment,
                 "testValue": test_val,
             }

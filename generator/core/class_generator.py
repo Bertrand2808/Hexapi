@@ -6,6 +6,8 @@ import re
 
 from jinja2 import Environment, FileSystemLoader
 
+from generator.core.java_imports import get_required_imports
+
 
 def render_template_to_output(
     json_path: str, template_path: str, output_root: str = "output"
@@ -60,7 +62,7 @@ def render_template_to_output(
     template = env.get_template(template_path_in_templates)
     print(template_path_in_templates)
 
-    rendered = template.render(**data)
+    rendered = template.render(**data, get_required_imports=get_required_imports)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(rendered)

@@ -53,6 +53,7 @@ def add_field(parent_frame, index=None):
     selected_type = tk.StringVar(value=type_options[0])
     test_value = tk.StringVar(value=get_fake_value(selected_type.get()))
     is_id = tk.BooleanVar(value=False)
+    nullable_var = tk.BooleanVar(value=False)
 
     name_label = tk.Label(
         content,
@@ -110,24 +111,39 @@ def add_field(parent_frame, index=None):
     )
     id_checkbox.grid(row=1, column=4, padx=(15, 0))
 
+    nullable_checkbox = ttk.Checkbutton(
+        content, text="nullable", variable=nullable_var, style="Custom.TCheckbutton"
+    )
+    nullable_checkbox.grid(row=1, column=5, padx=(15, 0))
+
     def update_test_value(_varname=None, _index=None, _mode=None):
         test_value.set(get_fake_value(selected_type.get()))
 
     selected_type.trace_add("write", update_test_value)
 
     def remove_row():
-        row.destroy()
         if isinstance(parent_frame, ScrollableFieldsFrame):
             fields_list = parent_frame.get_fields_list()
-            fields_list.remove(
-                (name_entry, type_combobox, comment_entry, test_entry, is_id, row)
-            )
+            # Trouver l'index du champ à supprimer
+            for i, field in enumerate(fields_list):
+                if field[-1] == row:  # Le dernier élément est la row
+                    fields_list.pop(i)
+                    break
             parent_frame.set_fields_list(fields_list)
+        row.destroy()
 
     delete_button = ttk.Button(content, text="🗑", width=3, command=remove_row)
-    delete_button.grid(row=1, column=5, padx=(15, 0))
+    delete_button.grid(row=1, column=6, padx=(15, 0))
 
-    return name_entry, type_combobox, comment_entry, test_entry, is_id, row
+    return (
+        name_entry,
+        type_combobox,
+        comment_entry,
+        test_entry,
+        is_id,
+        nullable_var,
+        row,
+    )
 
 
 class ScrollableFieldsFrame(tk.Frame):

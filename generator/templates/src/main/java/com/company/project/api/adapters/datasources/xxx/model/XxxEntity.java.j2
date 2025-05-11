@@ -1,35 +1,34 @@
 package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
-{% set has_time = fields | selectattr('type', 'in', ['ZonedDateTime', 'LocalDateTime', 'LocalDate']) | list %}
-{% if has_time %}import java.time.*;{% endif %}
+{% for import in get_required_imports(fields) %}
+import {{ import }};
+{% endfor %}
 
 /**
  * {{ Table }} entity mapping the database table.
  */
 @Entity
 @Table(name = "{{ table }}")
-@ToString(onlyExplicitlyIncluded = true)
-@EqualsAndHashCode
-@Getter
-@Setter
-public class {{ Table }}Entity {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class {{ Table }}Entity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
 {% for field in fields %}
     {% if field.isId %}
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     {% endif %}
-    @Column(name = "{{ field.nom | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = false)
-    {% if field.isId %}
-    @ToString.Include
+    {% if field.nullable %}
+    @Nullable
     {% endif %}
+    @Column(name = "{{ field.nom | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = {{ field.nullable | default('false') }})
     // comment: {{ field.comment }}
     // testValue: {{ field.testValue }}
     private {{ field.type }} {{ field.nom }};
 
 {% endfor %}
-    public {{ Table }}Entity() {}
 }

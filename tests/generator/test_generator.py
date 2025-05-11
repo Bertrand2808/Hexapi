@@ -3,13 +3,14 @@ from unittest.mock import MagicMock
 from generator.core.generator import build_entity_data, save_entity_json
 
 
-def mock_field(name, type_, comment="", test_value="", is_id=False):
+def mock_field(name, type_, comment="", test_value="", is_id=False, nullable=False):
     return (
         MagicMock(get=MagicMock(return_value=name)),
         MagicMock(get=MagicMock(return_value=type_)),
         MagicMock(get=MagicMock(return_value=comment)),
         MagicMock(get=MagicMock(return_value=test_value)),
         MagicMock(get=MagicMock(return_value=is_id)),
+        MagicMock(get=MagicMock(return_value=nullable)),
         None,  # row
     )
 
@@ -24,6 +25,7 @@ def test_build_entity_data():
     assert result["fields"][0]["nom"] == "nom"
     assert result["fields"][0]["type"] == "String"
     assert result["fields"][0]["isId"] is False
+    assert result["fields"][0]["nullable"] is False
 
 
 def test_save_entity_json(tmp_path):

@@ -1,245 +1,306 @@
 """Module principal de l'interface graphique HexAPI Generator."""
 
 # === Imports ===
+import os
+import shutil
 import tkinter as tk
 from tkinter import ttk
 
-from generator.core.generator import build_entity_data, save_entity_json
-from generator.core.naming import generate_name_variants
+from generator.core.generator import save_entity_json
+from generator.gui.layout.entity_board import EntityBoard
+from generator.gui.layout.entity_editor import EntityEditorWindow
+from generator.gui.layout.project_header import ProjectHeader
 from generator.gui.menubar import create_menu_bar
-from generator.gui.widgets import add_field, create_scrollable_fields_frame
 from generator.scripts.generate_entity import generate_all_templates
 
+# === Constantes de style ===
 BG_DARK = "#1e1e2f"
+BG_LIGHT = "#2e2e3e"
+BG_LIGHTER = "#3a3a4a"
+ACCENT_COLOR = "#4F8EF7"
+ACCENT_HOVER = "#6fa5f7"
+TEXT_COLOR = "#f0f0f0"
 FONT_FAMILY = "Segoe UI"
 FONT_SIZE_LABEL = 11
+FONT_SIZE_TITLE = 24
+FONT_SIZE_SUBTITLE = 18
+PADDING = 20
+BORDER_RADIUS = 8
+
+
+def clean_temp_folder():
+    """Nettoie le dossier temp au lancement de l'application."""
+    temp_dir = "temp"
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+    os.makedirs(temp_dir)
 
 
 def create_main_window():
     """Crée et configure la fenêtre principale de l'application."""
-
     root = tk.Tk()
     root.title("HexAPI Generator")
     root.geometry("1200x800")
     root.configure(bg=BG_DARK)
+    root.minsize(1000, 700)  # Taille minimale de la fenêtre
     return root
 
 
 def apply_style(root):
     """Applique le thème sombre et les styles personnalisés aux composants Tkinter."""
-
     style = ttk.Style(root)
     style.theme_use("clam")
 
+    # Style général
     style.configure(
-        "TLabel",
-        foreground="#f0f0f0",
-        background="#2e2e3e",
+        ".",
+        background=BG_DARK,
+        foreground=TEXT_COLOR,
         font=(FONT_FAMILY, FONT_SIZE_LABEL),
     )
+
+    # Labels
     style.configure(
-        "TEntry", foreground="white", fieldbackground="#3a3a4a", borderwidth=0
+        "TLabel",
+        background=BG_DARK,
+        foreground=TEXT_COLOR,
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
     )
+
+    # Entrées
+    style.configure(
+        "TEntry",
+        fieldbackground=BG_LIGHTER,
+        foreground=TEXT_COLOR,
+        borderwidth=0,
+        padding=5,
+    )
+
+    # Combobox
     style.configure(
         "Custom.TCombobox",
-        fieldbackground="#3a3a4a",  # couleur de fond du champ
-        background="#3a3a4a",  # couleur de fond du menu déroulant
-        foreground="white",  # texte
-        arrowcolor="white",  # couleur de la flèche
-        bordercolor="#4F8EF7",  # optionnel si tu veux border bleue
-        selectbackground="#4F8EF7",  # couleur de sélection
-        selectforeground="white",
-        padding=4,
+        fieldbackground=BG_LIGHTER,
+        background=BG_LIGHTER,
+        foreground=TEXT_COLOR,
+        arrowcolor=TEXT_COLOR,
+        bordercolor=ACCENT_COLOR,
+        selectbackground=ACCENT_COLOR,
+        selectforeground=TEXT_COLOR,
+        padding=5,
     )
 
     style.map(
         "Custom.TCombobox",
-        fieldbackground=[("readonly", "#3a3a4a")],
-        foreground=[("readonly", "white")],
-        background=[("readonly", "#3a3a4a")],
+        fieldbackground=[("readonly", BG_LIGHTER)],
+        foreground=[("readonly", TEXT_COLOR)],
+        background=[("readonly", BG_LIGHTER)],
     )
 
+    # Boutons
     style.configure(
         "TButton",
-        background="#4F8EF7",
-        foreground="white",
+        background=ACCENT_COLOR,
+        foreground=TEXT_COLOR,
         font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
-        padding=6,
+        padding=10,
         borderwidth=0,
     )
-    style.map("TButton", background=[("active", "#6fa5f7")])
+    style.map(
+        "TButton",
+        background=[("active", ACCENT_HOVER)],
+        foreground=[("active", TEXT_COLOR)],
+    )
+
+    # Frames avec label
     style.configure(
         "Custom.TLabelframe",
-        background="#2e2e3e",
-        foreground="white",
+        background=BG_LIGHT,
+        foreground=TEXT_COLOR,
         font=(FONT_FAMILY, FONT_SIZE_LABEL),
         borderwidth=1,
+        padding=10,
     )
     style.configure(
         "Custom.TLabelframe.Label",
-        background="#2e2e3e",
-        foreground="white",
+        background=BG_LIGHT,
+        foreground=TEXT_COLOR,
         font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
     )
 
+    # Checkbuttons
+    style.configure(
+        "Custom.TCheckbutton",
+        background=BG_LIGHT,
+        foreground=TEXT_COLOR,
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
+    )
 
-def make_label(parent, text):
+
+def make_label(parent, text, size=FONT_SIZE_LABEL, bold=False):
     """Crée un label stylisé avec les couleurs et polices de l'application."""
-
+    font_weight = "bold" if bold else "normal"
     return tk.Label(
         parent,
         text=text,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-        fg="white",
+        font=(FONT_FAMILY, size, font_weight),
+        fg=TEXT_COLOR,
         bg=parent["bg"],
     )
 
 
 def setup_main_interface(root, dev_mode=False):
     """Construit l'interface utilisateur principale : formulaires, champs et boutons."""
+    entities_data = {}  # {entity_name: {fields: [field_data]}}
+    entity_editors = {}  # {entity_name: EntityEditorWindow}
 
-    fields = []
+    def open_entity_editor(entity_name):
+        print(f"Opening editor for {entity_name}")
+        if entity_name in entity_editors:
+            try:
+                entity_editors[entity_name].lift()
+                return
+            except tk.TclError:
+                del entity_editors[entity_name]
 
-    main_frame = tk.Frame(root, bg="#2e2e3e", padx=40, pady=30)
+        editor = EntityEditorWindow(root, entity_name, header, dev_mode=dev_mode)
+        entity_editors[entity_name] = editor
+
+    def create_entity():
+        """Crée une nouvelle entité avec un nom personnalisé."""
+        dialog = tk.Toplevel(root)
+        dialog.title("Nouvelle entité")
+        dialog.geometry("400x200")
+        dialog.configure(bg=BG_LIGHT)
+        dialog.transient(root)
+        dialog.grab_set()
+
+        # Centrer la fenêtre
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = (dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (dialog.winfo_screenheight() // 2) - (height // 2)
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
+
+        # Titre
+        title = make_label(
+            dialog,
+            "Nom de la nouvelle entité",
+            size=14,
+            bold=True,
+        )
+        title.pack(pady=(30, 20))
+
+        # Champ de saisie
+        name_var = tk.StringVar()
+        name_entry = ttk.Entry(
+            dialog,
+            textvariable=name_var,
+            width=30,
+            font=(FONT_FAMILY, 12),
+        )
+        name_entry.pack(pady=(0, 30))
+        name_entry.focus_set()
+
+        def validate_and_create():
+            name = name_var.get().strip()
+            if name:
+                dialog.destroy()
+                entities_data[name] = []
+                entity_board.add_entity(name)
+                open_entity_editor(name)
+
+        # Bouton de validation
+        validate_btn = ttk.Button(
+            dialog,
+            text="Créer",
+            command=validate_and_create,
+            style="TButton",
+        )
+        validate_btn.pack()
+
+        dialog.bind("<Return>", lambda e: validate_and_create())
+        dialog.wait_window()
+
+    def generate_all_entities():
+        """Génère toutes les entités ouvertes."""
+        for entity_name, editor in list(entity_editors.items()):
+            try:
+                data = editor.get_entity_data()
+                filepath = save_entity_json(entity_name, data)
+                print(f"[OK] JSON généré pour {entity_name} : {filepath}")
+                generate_all_templates(json_path=filepath)
+            except tk.TclError:
+                del entity_editors[entity_name]
+
+    def update_entity_name(old_name, new_name):
+        """Met à jour le nom d'une entité dans l'interface."""
+        if old_name in entity_editors:
+            try:
+                editor = entity_editors.pop(old_name)
+                entity_editors[new_name] = editor
+                editor.entity_name = new_name
+                editor.title(f"Édition de {new_name}")
+            except tk.TclError:
+                if old_name in entity_editors:
+                    del entity_editors[old_name]
+
+        if old_name in entities_data:
+            entities_data[new_name] = entities_data.pop(old_name)
+
+        entity_board.update_entity_name(old_name, new_name)
+
+    # Frame principal avec padding
+    main_frame = tk.Frame(root, bg=BG_DARK, padx=PADDING, pady=PADDING)
     main_frame.pack(fill="both", expand=True)
 
-    title_label = tk.Label(
+    # Titre principal
+    title_label = make_label(
         main_frame,
-        text="Créateur de classes HexAPI",
-        font=("Helvetica Neue", 18, "bold"),
-        fg="white",
-        bg=main_frame["bg"],
+        "Créateur de classes HexAPI",
+        size=FONT_SIZE_TITLE,
+        bold=True,
     )
-    title_label.pack(pady=(10, 20))
+    title_label.pack(pady=(0, 30))
 
-    # === Ligne horizontale pour Nom Entreprise et Nom Projet ===
-    top_row_frame = tk.Frame(main_frame, bg=main_frame["bg"])
-    top_row_frame.pack(anchor="w", pady=(0, 20), fill="x")
-    top_row_frame.columnconfigure(1, weight=1)
-    top_row_frame.columnconfigure(3, weight=1)
+    # En-tête du projet
+    header = ProjectHeader(main_frame)
+    header.pack(anchor="w", fill="x", pady=(0, 30))
 
-    make_label(top_row_frame, "Nom Entreprise").grid(
-        row=0, column=0, sticky="w", padx=(0, 10)
-    )
-    company_entry = ttk.Entry(
-        top_row_frame, width=25, font=(FONT_FAMILY, FONT_SIZE_LABEL)
-    )
-    company_entry.grid(row=0, column=1, sticky="ew", padx=(0, 30))
-
-    make_label(top_row_frame, "Nom Projet").grid(
-        row=0, column=2, sticky="w", padx=(0, 10)
-    )
-    project_entry = ttk.Entry(
-        top_row_frame, width=25, font=(FONT_FAMILY, FONT_SIZE_LABEL)
-    )
-    project_entry.grid(row=0, column=3, sticky="ew")
-
-    make_label(main_frame, "Nom Entity (sans 'Entity')").pack(anchor="w")
-    entity_name_entry = ttk.Entry(
-        main_frame, width=40, font=(FONT_FAMILY, FONT_SIZE_LABEL)
-    )
-    entity_name_entry.pack(pady=(5, 20), anchor="w")
-
-    # === Cadre encadré pour les champs dynamiques ===
-    fields_section = ttk.LabelFrame(
+    # Section des entités
+    entity_section = ttk.LabelFrame(
         main_frame,
-        text="Champs de l'entité",
-        padding=(20, 10),
+        text="Entités",
+        padding=(20, 20),
         style="Custom.TLabelframe",
     )
+    entity_section.pack(fill="both", expand=True)
 
-    fields_section.pack(fill="both", expand=True, pady=(10, 20))
-    fields_section.configure(style="TLabel")
-
-    fields_frame = create_scrollable_fields_frame(fields_section, bg_color="#2e2e3e")
-
-    def handle_add_field():
-        index = len(fields) + 1
-        widgets = add_field(fields_frame, index=index)
-        fields.append(widgets)
-        fields_frame.set_fields_list(fields)
-
-    def generate_class():
-        company_raw = company_entry.get().strip()
-        project_raw = project_entry.get().strip()
-        entity_name = entity_name_entry.get().strip()
-
-        if not entity_name:
-            print("Erreur : nom de l'Entity vide.")
-            return
-
-        company_variants = generate_name_variants(company_raw)
-        project_variants = generate_name_variants(project_raw)
-
-        data = build_entity_data(entity_name, fields)
-        data["company"] = company_variants
-        data["project"] = project_variants
-
-        filepath = save_entity_json(entity_name, data)
-        print(f"[OK] Json was generated in : {filepath}")
-
-        generate_all_templates(json_path=filepath)
-
-    add_field_button = ttk.Button(
-        main_frame, text="Ajouter un champ", command=handle_add_field
+    entity_board = EntityBoard(
+        entity_section,
+        on_entity_click=open_entity_editor,
+        on_add_entity=create_entity,
     )
-    add_field_button.pack(pady=(10, 10), anchor="w")
+    entity_board.pack(fill="both", expand=True)
 
-    # Ligne de séparation
-    ttk.Separator(main_frame, orient="horizontal").pack(fill="x", pady=10)
-
-    generate_button = ttk.Button(
-        main_frame, text="Générer la classe", command=generate_class
+    # Bouton de génération
+    generate_btn = ttk.Button(
+        main_frame,
+        text="🚀 Générer toutes les entités",
+        command=generate_all_entities,
+        style="TButton",
     )
-    generate_button.pack(pady=(10, 0), anchor="center")
+    generate_btn.pack(pady=(30, 0), anchor="center")
 
-    if dev_mode:
-        dev_button = ttk.Button(
-            main_frame,
-            text="Pré-remplir pour test 🧪",
-            command=lambda: auto_fill_fields(
-                company_entry,
-                project_entry,
-                entity_name_entry,
-                fields,
-                handle_add_field,
-            ),
-        )
-        dev_button.pack(pady=(5, 0), anchor="w")
-
-
-def auto_fill_fields(
-    company_entry, project_entry, entity_name_entry, fields, handle_add_field
-):
-    """Préremplit les champs pour les tests en dev."""
-    company_entry.delete(0, tk.END)
-    company_entry.insert(0, "TestDemonEntreprise")
-
-    project_entry.delete(0, tk.END)
-    project_entry.insert(0, "MonSuperProjet")
-
-    entity_name_entry.delete(0, tk.END)
-    entity_name_entry.insert(0, "User")
-
-    exemples = [
-        ("id", "Long", "id de l'utilisateur", "42", True),
-        ("name", "String", "nom complet", "Toto Bidule", False),
-        ("mail", "String", "email principal", "toto@hexapi.dev", False),
-    ]
-
-    for nom, type_, comment, test_value, is_id_value in exemples:
-        handle_add_field()
-        name_entry, type_combobox, comment_entry, test_entry, is_id, _ = fields[-1]
-        name_entry.insert(0, nom)
-        type_combobox.set(type_)
-        comment_entry.insert(0, comment)
-        test_entry.insert(0, test_value)
-        is_id.set(is_id_value)
+    # Exposer la fonction de mise à jour du nom
+    entity_board.update_entity_name = update_entity_name
 
 
 def main():
     """Point d'entrée principal de l'interface :
     initialise la fenêtre et les composants."""
+
+    clean_temp_folder()
 
     root = create_main_window()
     apply_style(root)
