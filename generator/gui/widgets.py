@@ -4,63 +4,93 @@ Inclut les champs dynamiques (nom, type, commentaire, valeur de test)
 ainsi qu'une frame scrollable personnalisée.
 """
 
+import os
 import tkinter as tk
 from tkinter import ttk
+
+from PIL import Image, ImageTk
 
 from generator.core.fake_utils import get_fake_value
 from generator.core.logger import logger
 from generator.gui.style import (
     BG_COLOR,
-    BUTTON_SPACING,
     FONT_FAMILY,
     FONT_SIZE_LABEL,
-    LABEL_ENTRY_SPACING,
-    PADDING,
     SECTION_SPACING,
     TEXT_COLOR,
 )
 
+DELETE_ICON = None
 
-def add_field(parent_frame, index=None):
-    """
-    Ajoute dynamiquement une ligne de champ (nom + type + commentaire + testValue).
-    Chaque champ est inséré dans la scrollable frame et stylisé.
-    """
-    logger.info("Ajout d'un champ pour %s", parent_frame.entity_name)
 
-    # Container principal avec ombre et coins arrondis
-    row = tk.Frame(parent_frame, bg=BG_COLOR, padx=PADDING, pady=PADDING)
-    row.pack(fill="x", pady=SECTION_SPACING)
+def load_icons():
+    global DELETE_ICON
+    path = os.path.join("generator", "assets", "icons", "delete_light_mode.png")
+    img = Image.open(path)
+    img = img.resize((18, 18), Image.Resampling.LANCZOS)
+    DELETE_ICON = ImageTk.PhotoImage(img)
 
-    # En-tête avec numéro et bouton de suppression
-    header = tk.Frame(row, bg=BG_COLOR)
-    header.pack(fill="x", pady=(0, 8))
 
-    if index is not None:
-        index_label = tk.Label(
-            header,
-            text=f"#{index}",
-            font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
-            fg=TEXT_COLOR,
-            bg=BG_COLOR,
-            width=4,
-        )
-        index_label.pack(side="left")
+def create_scrollable_fields_frame(parent, bg_color, entity_name):
+    """Crée une frame scrollable pour les champs d'une entité."""
+    # Container principal
+    container = tk.Frame(parent, bg=bg_color)
+    container.pack(fill="both", expand=True)
 
-    delete_button = ttk.Button(
-        header,
-        text="🗑",
-        width=3,
-        command=lambda: remove_row(),
-        style="Red.TButton",
-        cursor="hand2",
+    # Canvas avec scrollbar
+    canvas = tk.Canvas(container, bg=bg_color, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg=bg_color)
+
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
     )
-    delete_button.pack(side="right")
 
-    # Contenu du champ
-    content = tk.Frame(row, bg=BG_COLOR)
-    content.pack(fill="x")
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
 
+    # Placement des widgets
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # Gestion du scroll avec la molette
+    def _on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+    # Nettoyer les bindings quand le widget est détruit
+    def _on_destroy(event):
+        canvas.unbind_all("<MouseWheel>")
+
+    canvas.bind("<Destroy>", _on_destroy)
+
+    return scrollable_frame
+
+
+def add_field(parent_frame, field_data=None):
+    row = tk.Frame(parent_frame, bg=BG_COLOR, pady=4)
+    row.pack(fill="x", pady=(0, SECTION_SPACING))
+
+    number_label = tk.Label(
+        row,
+        text=f"#{len(parent_frame.winfo_children())}",
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
+        fg=TEXT_COLOR,
+        bg=BG_COLOR,
+        width=4,
+    )
+    number_label.grid(row=0, column=0, padx=(0, 8), sticky="w")
+
+    name_entry = ttk.Entry(row)
+    name_entry.grid(row=0, column=1, padx=(0, 8), sticky="ew")
+    if field_data and field_data.get("name"):
+        name_entry.insert(0, field_data["name"])
+        name_entry.configure(foreground=TEXT_COLOR)
+    else:
+        set_placeholder(name_entry, "Name of the field")
+    row.name_entry = name_entry
     type_options = [
         "String",
         "Integer",
@@ -73,113 +103,84 @@ def add_field(parent_frame, index=None):
         "LocalDateTime",
         "UUID",
     ]
-    selected_type = tk.StringVar(value=type_options[0])
-    test_value = tk.StringVar(value=get_fake_value(selected_type.get()))
-    is_id = tk.BooleanVar(value=False)
-    nullable_var = tk.BooleanVar(value=False)
-
-    # Grille des champs
-    fields = [
-        ("Nom", "name", 0),
-        ("Type", "type", 1),
-        ("Commentaire", "comment", 2),
-        ("Valeur de test", "test", 3),
-    ]
-
-    # Initialiser les variables pour éviter les erreurs de linter
-    name_entry = None
-    type_combobox = None
-    comment_entry = None
-    test_entry = None
-
-    for label_text, field_type, col in fields:
-        field_frame = tk.Frame(content, bg=BG_COLOR)
-        field_frame.grid(row=0, column=col, padx=(0, PADDING), sticky="ew")
-
-        label = tk.Label(
-            field_frame,
-            text=label_text,
-            font=(FONT_FAMILY, FONT_SIZE_LABEL),
-            fg=TEXT_COLOR,
-            bg=BG_COLOR,
-        )
-        label.pack(anchor="w", pady=(0, LABEL_ENTRY_SPACING))
-
-        if field_type == "name":
-            entry = ttk.Entry(field_frame, width=20)
-            entry.pack(fill="x")
-            name_entry = entry
-        elif field_type == "type":
-            combobox = ttk.Combobox(
-                field_frame,
-                values=type_options,
-                width=15,
-                state="readonly",
-                textvariable=selected_type,
-                style="Custom.TCombobox",
-            )
-            combobox.pack(fill="x")
-            type_combobox = combobox
-        elif field_type == "comment":
-            entry = ttk.Entry(field_frame, width=20)
-            entry.pack(fill="x")
-            comment_entry = entry
-        else:  # test
-            entry = ttk.Entry(field_frame, textvariable=test_value, width=20)
-            entry.pack(fill="x")
-            test_entry = entry
-
-    # Options
-    options_frame = tk.Frame(content, bg=BG_COLOR)
-    options_frame.grid(row=0, column=4, padx=(PADDING, 0), sticky="ew")
-
-    id_checkbox = ttk.Checkbutton(
-        options_frame,
-        text="ID",
-        variable=is_id,
-        style="Custom.TCheckbutton",
-        cursor="hand2",
-    )
-    id_checkbox.pack(side="left", padx=(0, BUTTON_SPACING))
-
-    nullable_checkbox = ttk.Checkbutton(
-        options_frame,
-        text="nullable",
-        variable=nullable_var,
-        style="Custom.TCheckbutton",
-        cursor="hand2",
-    )
-    nullable_checkbox.pack(side="left")
-
-    def update_test_value(_varname=None, _index=None, _mode=None):
-        logger.info(
-            "Mise à jour de la valeur de test pour %s", parent_frame.entity_name
-        )
-        test_value.set(get_fake_value(selected_type.get()))
-
-    selected_type.trace_add("write", update_test_value)
-
-    def remove_row():
-        logger.info("Suppression de la ligne pour %s", parent_frame.entity_name)
-        if isinstance(parent_frame, ScrollableFieldsFrame):
-            fields_list = parent_frame.get_fields_list()
-            # Trouver l'index du champ à supprimer
-            for i, field in enumerate(fields_list):
-                if field[-1] == row:  # Le dernier élément est la row
-                    fields_list.pop(i)
-                    break
-            parent_frame.set_fields_list(fields_list)
-        row.destroy()
-
-    return (
-        name_entry,
-        type_combobox,
-        comment_entry,
-        test_entry,
-        is_id,
-        nullable_var,
+    type_var = tk.StringVar(value=type_options[0])
+    if field_data:
+        type_var.set(field_data.get("type", type_options[0]))
+    type_combobox = ttk.Combobox(
         row,
+        values=type_options,
+        textvariable=type_var,
+        state="readonly",
+        style="Custom.TCombobox",
+        width=15,
     )
+    type_combobox.bind(
+        "<<ComboboxSelected>>", lambda e: type_combobox.selection_clear()
+    )
+    type_combobox.grid(row=0, column=2, padx=(0, 8), sticky="ew")
+    row.type_combobox = type_combobox
+
+    def clear_selection(event):
+        event.widget.icursor(tk.END)
+        event.widget.selection_clear()
+
+    def update_test_value(event=None):
+        test_var.set(get_fake_value(type_var.get()))
+
+    type_combobox.bind("<<ComboboxSelected>>", update_test_value)
+    type_combobox.bind("<<ComboboxSelected>>", clear_selection, add="+")
+
+    comment_entry = ttk.Entry(row)
+    comment_entry.grid(row=0, column=3, padx=(0, 8), sticky="ew")
+    if field_data and field_data.get("comment"):
+        comment_entry.insert(0, field_data["comment"])
+        comment_entry.configure(foreground=TEXT_COLOR)
+    else:
+        set_placeholder(comment_entry, "Comment")
+    row.comment_entry = comment_entry
+
+    test_var = tk.StringVar()
+    test_entry = ttk.Entry(row, textvariable=test_var)
+    test_entry.grid(row=0, column=4, padx=(0, 8), sticky="ew")
+    if field_data and field_data.get("test_value"):
+        test_var.set(field_data["test_value"])
+        test_entry.configure(foreground=TEXT_COLOR)
+    else:
+        set_placeholder(test_entry, "Test value")
+    row.test_entry = test_entry
+
+    id_var = tk.BooleanVar()
+    id_check = ttk.Checkbutton(
+        row, text="id", variable=id_var, style="Custom.TCheckbutton"
+    )
+    id_check.grid(row=0, column=5, padx=(0, 8), sticky="w")
+    row.is_id_var = id_var
+
+    nullable_var = tk.BooleanVar()
+    nullable_check = ttk.Checkbutton(
+        row, text="Nullable", variable=nullable_var, style="Custom.TCheckbutton"
+    )
+    nullable_check.grid(row=0, column=6, padx=(0, 8), sticky="w")
+    row.nullable_var = nullable_var
+
+    delete_btn = ttk.Button(
+        row,
+        image=DELETE_ICON,
+        command=lambda: row.destroy(),
+        style="Red.TButton",
+        width=1,
+    )
+    delete_btn.grid(row=0, column=7, padx=(0, 0), sticky="e")
+
+    # Expand entries
+    row.grid_columnconfigure(1, weight=2)
+    row.grid_columnconfigure(2, weight=2)
+    row.grid_columnconfigure(3, weight=3)
+    row.grid_columnconfigure(4, weight=2)
+
+    if field_data:
+        id_var.set(field_data.get("is_id", False))
+        nullable_var.set(field_data.get("nullable", False))
 
 
 class ScrollableFieldsFrame(tk.Frame):
@@ -205,53 +206,32 @@ class ScrollableFieldsFrame(tk.Frame):
         return self._fields_list
 
 
-def create_scrollable_fields_frame(parent, bg_color, entity_name="Unknown"):
-    """Crée une section scrollable pour accueillir les champs dynamiques."""
-    logger.info("Création du frame scrollable pour %s", entity_name)
-    container = tk.Frame(parent, bg=bg_color)
-    container.pack(fill="both", expand=True, pady=(10, 0))
+def set_placeholder(entry_widget, placeholder_text):
+    """
+    Ajoute un placeholder qui disparaît au focus et rétablit la couleur normale
+        quand on tape.
+    """
 
-    canvas = tk.Canvas(container, bg=bg_color, highlightthickness=0)
-    canvas.pack(side="left", fill="both", expand=True)
+    def on_focus_in(event):
+        if getattr(entry_widget, "_has_placeholder", False):
+            entry_widget.delete(0, tk.END)
+            entry_widget.configure(foreground=TEXT_COLOR)
+            entry_widget._has_placeholder = False
 
-    scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-    scrollbar.pack(side="right", fill="y")
+    def on_focus_out(event):
+        if not entry_widget.get():
+            entry_widget.insert(0, placeholder_text)
+            entry_widget.configure(foreground="gray")
+            entry_widget._has_placeholder = True
 
-    scrollable_frame = ScrollableFieldsFrame(canvas, bg_color, entity_name)
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    def on_key_release(event):
+        if not getattr(entry_widget, "_has_placeholder", False):
+            entry_widget.configure(foreground=TEXT_COLOR)
 
-    def on_frame_configure(_event):
-        canvas.configure(scrollregion=canvas.bbox("all"))
+    entry_widget.bind("<FocusIn>", on_focus_in)
+    entry_widget.bind("<FocusOut>", on_focus_out)
+    entry_widget.bind("<KeyRelease>", on_key_release)
 
-    def on_mouse_wheel(event):
-        """Gère le défilement de la souris."""
-        try:
-            # Sur Windows, event.delta est en multiples de 120
-            # Sur Linux/Mac, event.delta est en pixels
-            if event.num == 4:  # Linux scroll up
-                canvas.yview_scroll(-1, "units")
-            elif event.num == 5:  # Linux scroll down
-                canvas.yview_scroll(1, "units")
-            else:  # Windows/Mac
-                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        except tk.TclError:
-            # Ignorer l'erreur si le canvas a été détruit
-            pass
-
-    scrollable_frame.bind("<Configure>", on_frame_configure)
-    canvas.configure(yscrollcommand=scrollbar.set)
-
-    # Lier l'événement de défilement au canvas uniquement
-    canvas.bind("<MouseWheel>", on_mouse_wheel)  # Windows
-    canvas.bind("<Button-4>", on_mouse_wheel)  # Linux scroll up
-    canvas.bind("<Button-5>", on_mouse_wheel)  # Linux scroll down
-
-    # Nettoyer l'événement lors de la destruction
-    def on_destroy(_event):
-        canvas.unbind("<MouseWheel>")
-        canvas.unbind("<Button-4>")
-        canvas.unbind("<Button-5>")
-
-    canvas.bind("<Destroy>", on_destroy)
-
-    return scrollable_frame
+    entry_widget.insert(0, placeholder_text)
+    entry_widget.configure(foreground="gray")
+    entry_widget._has_placeholder = True

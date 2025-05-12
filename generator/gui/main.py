@@ -22,12 +22,12 @@ from generator.gui.style import (
     ERROR_COLOR,
     FONT_FAMILY,
     FONT_SIZE_LABEL,
-    FONT_SIZE_TITLE,
     LABELFRAME_BG,
     PADDING,
     SUCCESS_COLOR,
     TEXT_COLOR,
 )
+from generator.gui.widgets import load_icons
 from generator.scripts.generate_entity import generate_all_templates
 
 # === Constants ===
@@ -62,7 +62,7 @@ def create_main_window():
 
 
 def apply_style(root):
-    """Applique le thème sombre et les styles personnalisés aux composants Tkinter."""
+    """Applique le thème clair et les styles personnalisés aux composants Tkinter."""
     style = ttk.Style(root)
     style.theme_use("clam")
 
@@ -88,8 +88,8 @@ def apply_style(root):
         fieldbackground=BG_LIGHTER,
         foreground=TEXT_COLOR,
         borderwidth=1,
-        relief="flat",
-        padding=8,
+        relief="solid",
+        padding=12,
         bordercolor=BORDER_COLOR,
     )
 
@@ -102,8 +102,8 @@ def apply_style(root):
         arrowcolor=TEXT_COLOR,
         bordercolor=BORDER_COLOR,
         selectbackground=ACCENT_COLOR,
-        selectforeground=TEXT_COLOR,
-        padding=8,
+        selectforeground="white",
+        padding=12,
     )
 
     style.map(
@@ -117,8 +117,8 @@ def apply_style(root):
     style.configure(
         "TButton",
         background=ACCENT_COLOR,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
+        foreground="white",
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
         padding=12,
         borderwidth=0,
         relief="flat",
@@ -126,8 +126,7 @@ def apply_style(root):
     style.map(
         "TButton",
         background=[("active", ACCENT_HOVER)],
-        foreground=[("active", TEXT_COLOR)],
-        relief=[("active", "groove")],
+        foreground=[("active", "white")],
     )
 
     # Frames avec label
@@ -137,8 +136,8 @@ def apply_style(root):
         foreground=TEXT_COLOR,
         font=(FONT_FAMILY, FONT_SIZE_LABEL),
         borderwidth=1,
-        padding=16,
-        relief="ridge",
+        relief="solid",
+        padding=24,
     )
     style.configure(
         "Custom.TLabelframe.Label",
@@ -159,8 +158,8 @@ def apply_style(root):
     style.configure(
         "Green.TButton",
         background=SUCCESS_COLOR,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
+        foreground="white",
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
         padding=12,
         borderwidth=0,
         relief="flat",
@@ -168,9 +167,8 @@ def apply_style(root):
 
     style.map(
         "Green.TButton",
-        background=[("active", "#2ecc71")],
-        foreground=[("active", TEXT_COLOR)],
-        relief=[("active", "groove")],
+        background=[("active", "#218838")],
+        foreground=[("active", "white")],
     )
 
     # Bouton secondaire
@@ -178,7 +176,7 @@ def apply_style(root):
         "Red.TButton",
         background=ERROR_COLOR,
         foreground="white",
-        font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
+        font=(FONT_FAMILY, FONT_SIZE_LABEL),
         padding=12,
         borderwidth=0,
         relief="flat",
@@ -186,9 +184,8 @@ def apply_style(root):
 
     style.map(
         "Red.TButton",
-        background=[("active", "#c0392b")],
-        foreground=[("active", TEXT_COLOR)],
-        relief=[("active", "groove")],
+        background=[("active", "#c82333")],
+        foreground=[("active", "white")],
     )
 
 
@@ -260,81 +257,76 @@ def setup_main_interface(root, dev_mode=False):
                 logger.info("Editor %s is already open, it is closed", entity_name)
                 del entity_editors[entity_name]
 
-        editor = EntityEditorWindow(root, entity_name, header, dev_mode=dev_mode)
+        editor = EntityEditorWindow(
+            root,
+            entity_name,
+            on_name_change=update_entity_name,
+            dev_mode=dev_mode,
+        )
         entity_editors[entity_name] = editor
 
     def create_entity():
-        logger.info("Creating new entity")
-        dialog = tk.Toplevel(root)
-        dialog.title("New entity")
-        dialog.geometry("400x200")
-        dialog.configure(bg=BG_LIGHT)
-        dialog.transient(root)
-        dialog.grab_set()
+        """Crée une nouvelle entité avec un nom par défaut,
+        puis ouvre directement l'éditeur."""
+        base_name = "NouvelleEntite"
+        suffix = 1
+        name = base_name
 
-        dialog.update_idletasks()
-        width = dialog.winfo_width()
-        height = dialog.winfo_height()
-        x = (dialog.winfo_screenwidth() // 2) - (width // 2)
-        y = (dialog.winfo_screenheight() // 2) - (height // 2)
-        dialog.geometry(f"{width}x{height}+{x}+{y}")
+        # Générer un nom unique
+        while name in entities_data:
+            name = f"{base_name}{suffix}"
+            suffix += 1
 
-        title = make_label(
-            dialog,
-            "New entity name",
-            size=14,
-            bold=True,
-        )
-        title.pack(pady=(30, 20))
+        logger.info("Creating entity %s", name)
+        entities_data[name] = []
+        entity_board.add_entity(name)
+        open_entity_editor(name)
 
-        name_var = tk.StringVar()
-        name_entry = ttk.Entry(
-            dialog,
-            textvariable=name_var,
-            width=30,
-            font=(FONT_FAMILY, 12),
-        )
-        name_entry.pack(pady=(0, 30))
-        name_entry.focus_set()
+    # Ajoute un set pour suivre les opérations en cours
+    operations_in_progress = set()
 
-        def validate_and_create():
-            name = name_var.get().strip()
-            if not name:
-                show_error_message(dialog, "The entity name cannot be empty")
-                return
-            logger.info("Creating entity %s", name)
-            dialog.destroy()
-            entities_data[name] = []
-            entity_board.add_entity(name)
-            open_entity_editor(name)
+    def handle_delete_entity(entity_name):
+        """Supprime une entité et ses ressources associées."""
+        operation_key = f"delete_{entity_name}"
+        if operation_key in operations_in_progress:
+            logger.info("Skipping recursive deletion of %s", entity_name)
+            return
 
-        validate_btn = ttk.Button(
-            dialog,
-            text="Create",
-            command=validate_and_create,
-            style="TButton",
-        )
-        validate_btn.pack()
+        operations_in_progress.add(operation_key)
+        try:
+            logger.info("Deleting entity %s", entity_name)
 
-        dialog.bind("<Return>", lambda e: validate_and_create())
-        dialog.wait_window()
+            # Fermer l'éditeur s'il est ouvert
+            if entity_name in entity_editors:
+                try:
+                    editor = entity_editors[entity_name]
+                    editor._is_being_deleted = (
+                        True  # Marquer l'éditeur comme en cours de suppression
+                    )
+                    editor.destroy()
+                except tk.TclError:
+                    pass  # L'éditeur est déjà fermé
+                del entity_editors[entity_name]
 
-    def delete_entity(entity_name):
-        logger.info("Deleting entity %s", entity_name)
-        if entity_name in entity_editors:
-            try:
-                entity_editors[entity_name].destroy()
-            except tk.TclError:
-                pass
-            del entity_editors[entity_name]
+            # Supprimer les données de l'entité
+            if entity_name in entities_data:
+                del entities_data[entity_name]
 
-        if entity_name in entities_data:
-            del entities_data[entity_name]
+            # Supprimer le fichier JSON temporaire
+            json_path = f"temp/{entity_name}.json"
+            if os.path.exists(json_path):
+                logger.info("Deleting temporary JSON file %s", json_path)
+                try:
+                    os.remove(json_path)
+                except OSError as e:
+                    logger.error("Error deleting JSON file: %s", e)
 
-        json_path = f"temp/{entity_name}.json"
-        if os.path.exists(json_path):
-            logger.info("Deleting temporary JSON file %s", json_path)
-            os.remove(json_path)
+            # Supprimer l'entité du board
+            if entity_name in entity_board.entities:
+                entity_board.delete_entity(entity_name)
+                logger.info("Entity %s deleted from board", entity_name)
+        finally:
+            operations_in_progress.remove(operation_key)
 
     def generate_all_entities():
         logger.info("Generating all entities")
@@ -388,197 +380,130 @@ def setup_main_interface(root, dev_mode=False):
         )
 
     def update_entity_name(old_name, new_name):
+        operation_key = f"rename_{old_name}_{new_name}"
+        if operation_key in operations_in_progress:
+            logger.info("Skipping recursive update from %s to %s", old_name, new_name)
+            return
+
         logger.info("Updating entity name from %s to %s", old_name, new_name)
-        if old_name in entity_editors:
-            try:
-                editor = entity_editors.pop(old_name)
-                entity_editors[new_name] = editor
-                editor.entity_name = new_name
-                editor.title(f"Editing {new_name}")
-            except tk.TclError:
-                if old_name in entity_editors:
-                    logger.info("Deleting old editor %s", old_name)
-                    del entity_editors[old_name]
+        operations_in_progress.add(operation_key)
 
-        if old_name in entities_data:
-            entities_data[new_name] = entities_data.pop(old_name)
-            logger.info("Updating entity data for %s", new_name)
+        try:
+            if old_name in entity_editors:
+                try:
+                    editor = entity_editors.pop(old_name)
+                    entity_editors[new_name] = editor
+                    editor.entity_name = new_name
+                    editor.title(f"Editing {new_name}")
+                except tk.TclError:
+                    if old_name in entity_editors:
+                        del entity_editors[old_name]
 
-        entity_board.update_entity_name(old_name, new_name)
-        logger.info("Updating entity %s", new_name)
+            if old_name in entities_data:
+                entities_data[new_name] = entities_data.pop(old_name)
 
-    # --- Conteneur principal avec grid ---
+            # Renommer le fichier JSON si nécessaire
+            old_json_path = f"temp/{old_name}.json"
+            new_json_path = f"temp/{new_name}.json"
+            if os.path.exists(old_json_path):
+                os.rename(old_json_path, new_json_path)
+
+            if old_name in entity_board.entities:
+                box = entity_board.entities.pop(old_name)
+                box.rename(new_name)
+                entity_board.entities[new_name] = box
+
+        finally:
+            operations_in_progress.remove(operation_key)
+
+    # --- Layout principal ---
     main_container = tk.Frame(root, bg=BG_DARK)
     main_container.grid(row=0, column=0, sticky="nsew")
     root.grid_rowconfigure(0, weight=1)
     root.grid_columnconfigure(0, weight=1)
-    main_container.grid_rowconfigure(0, weight=1)
-    main_container.grid_rowconfigure(1, weight=0)
+    main_container.grid_rowconfigure(0, weight=0)
+    main_container.grid_rowconfigure(1, weight=1)
     main_container.grid_columnconfigure(0, weight=1)
 
-    # --- Partie haute : header + section entités (scrollable) ---
-    top_frame = tk.Frame(main_container, bg=BG_DARK)
-    top_frame.grid(row=0, column=0, sticky="nsew")
-    top_frame.grid_rowconfigure(0, weight=0)
-    top_frame.grid_rowconfigure(1, weight=1)
-    top_frame.grid_columnconfigure(0, weight=1)
-
-    # --- Partie basse : bouton de génération (fixe) ---
-    bottom_frame = tk.Frame(main_container, bg=BG_DARK)
-    bottom_frame.grid(row=1, column=0, sticky="ew")
-
-    # Frame principal avec padding (dans top_frame)
-    main_frame = tk.Frame(top_frame, bg=BG_DARK, padx=PADDING, pady=PADDING)
-    main_frame.grid(row=0, column=0, sticky="ew")
-
-    # Titre principal
+    # Ligne pour le titre
+    title_frame = tk.Frame(main_container, bg=BG_DARK)
+    title_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
     title_label = make_label(
-        main_frame,
-        "HEXAPI GENERATOR",
-        size=FONT_SIZE_TITLE,
+        title_frame,
+        "HexAPI Generator",
+        size=12,
         bold=True,
     )
-    title_label.pack(pady=(0, 30))
+    title_label.pack(pady=(8, 0), anchor="center")
 
-    # En-tête du projet
-    header = ProjectHeader(main_frame)
-    header.pack(anchor="w", fill="x", pady=(0, 30))
+    # --- Zone haute divisée en 2 parties ---
+    top_frame = tk.Frame(main_container, bg=BG_DARK)
+    top_frame.grid(row=1, column=0, sticky="nsew")
+    top_frame.grid_rowconfigure(0, weight=1)
+    top_frame.grid_columnconfigure(0, weight=0, minsize=420)
+    top_frame.grid_columnconfigure(1, weight=2)
 
-    # --- Section des entités scrollable ---
-    entity_section_container = tk.Frame(top_frame, bg=BG_DARK)
-    entity_section_container.grid(row=1, column=0, sticky="nsew")
+    # --- Colonne gauche : project header ---
+    header = ProjectHeader(top_frame, width=360, height=400)
+    header.grid(row=0, column=0, sticky="n", padx=(PADDING * 2, PADDING), pady=PADDING)
+    header.grid_propagate(False)
+
+    # --- Colonne droite : entités ---
+    entity_section_container = tk.Frame(top_frame, bg=BG_LIGHT, padx=24, pady=24)
+    entity_section_container.grid(
+        row=0,
+        column=1,
+        sticky="nsew",
+        padx=(PADDING, PADDING * 2),
+        pady=PADDING,
+    )
     entity_section_container.grid_rowconfigure(0, weight=1)
-    entity_section_container.grid_columnconfigure(0, weight=1)
 
-    # Canvas + Scrollbar
-    entity_canvas = tk.Canvas(
-        entity_section_container, bg=BG_DARK, highlightthickness=0
-    )
-    entity_canvas.grid(row=0, column=0, sticky="nsew")
-    entity_scrollbar = ttk.Scrollbar(
-        entity_section_container, orient="vertical", command=entity_canvas.yview
-    )
-    entity_scrollbar.grid(row=0, column=1, sticky="ns")
-    entity_canvas.configure(yscrollcommand=entity_scrollbar.set)
-
-    # Frame réelle qui contient les entités
-    entity_section = ttk.LabelFrame(
-        entity_canvas,
-        text="Entities",
-        padding=(20, 20),
-        style="Custom.TLabelframe",
-    )
-    entity_window = entity_canvas.create_window(
-        (0, 0), window=entity_section, anchor="nw"
-    )
-
-    def on_entity_frame_configure(event):
-        # Mettre à jour la région de défilement
-        entity_canvas.configure(scrollregion=entity_canvas.bbox("all"))
-
-        # Vérifier si la scrollbar est nécessaire
-        bbox = entity_canvas.bbox("all")
-        if bbox:
-            canvas_height = entity_canvas.winfo_height()
-            content_height = bbox[3] - bbox[1]
-            if content_height <= canvas_height:
-                entity_scrollbar.grid_remove()  # Cacher la scrollbar
-            else:
-                entity_scrollbar.grid()  # Afficher la scrollbar
-
-    entity_section.bind("<Configure>", on_entity_frame_configure)
-
-    def on_entity_canvas_configure(event):
-        # Adapter la largeur de la frame à celle du canvas
-        canvas_width = event.width
-        entity_canvas.itemconfig(entity_window, width=canvas_width)
-
-        # Vérifier à nouveau si la scrollbar est nécessaire
-        bbox = entity_canvas.bbox("all")
-        if bbox:
-            canvas_height = event.height
-            content_height = bbox[3] - bbox[1]
-            if content_height <= canvas_height:
-                entity_scrollbar.grid_remove()  # Cacher la scrollbar
-            else:
-                entity_scrollbar.grid()  # Afficher la scrollbar
-
-    entity_canvas.bind("<Configure>", on_entity_canvas_configure)
-
-    # Scroll à la molette
-    def on_mouse_wheel(event):
-        try:
-            # Vérifier si la souris est dans la zone des entités
-            x = event.x_root - entity_section_container.winfo_rootx()
-            y = event.y_root - entity_section_container.winfo_rooty()
-
-            if (
-                0 <= x <= entity_section_container.winfo_width()
-                and 0 <= y <= entity_section_container.winfo_height()
-            ):
-                # Sur Windows, event.delta est en multiples de 120
-                # Sur Linux/Mac, event.delta est en pixels
-                if event.num == 4:  # Linux scroll up
-                    entity_canvas.yview_scroll(-1, "units")
-                elif event.num == 5:  # Linux scroll down
-                    entity_canvas.yview_scroll(1, "units")
-                else:  # Windows/Mac
-                    entity_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        except tk.TclError:
-            # Ignorer l'erreur si le canvas a été détruit
-            pass
-
-    # Lier l'événement de défilement à la fenêtre principale
-    root.bind_all("<MouseWheel>", on_mouse_wheel)  # Windows
-    root.bind_all("<Button-4>", on_mouse_wheel)  # Linux scroll up
-    root.bind_all("<Button-5>", on_mouse_wheel)  # Linux scroll down
-
-    def on_destroy(_event):
-        root.unbind_all("<MouseWheel>")
-        root.unbind_all("<Button-4>")
-        root.unbind_all("<Button-5>")
-
-    entity_canvas.bind("<Destroy>", on_destroy)
-
-    # --- Board des entités ---
     entity_board = EntityBoard(
-        entity_section,
+        entity_section_container,
         on_entity_click=open_entity_editor,
         on_add_entity=create_entity,
+        on_entity_delete=handle_delete_entity,
     )
-    entity_board.pack(fill="both", expand=True)
+    entity_board.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
-    # --- Bouton de génération (fixe en bas) ---
+    # --- Zone basse : bouton de génération et version (fixe) ---
+    bottom_frame = tk.Frame(main_container, bg=BG_DARK)
+    bottom_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
+    bottom_frame.grid_columnconfigure(0, weight=1)  # Pour centrer le contenu
+
+    # Container pour le bouton et la version
+    bottom_content = tk.Frame(bottom_frame, bg=BG_DARK)
+    bottom_content.pack(pady=(20, 10))
+
     generate_btn = ttk.Button(
-        bottom_frame,
+        bottom_content,
         text="🚀 Generate all entities",
         command=generate_all_entities,
         style="TButton",
     )
-    generate_btn.pack(pady=(30, 20), anchor="center")
+    generate_btn.pack(pady=(0, 8))
 
-    # Version label
     version_label = make_label(
-        bottom_frame,
+        bottom_content,
         f"Version {VERSION}",
         size=10,
     )
-    version_label.pack(pady=(0, 10), anchor="center")
+    version_label.pack()
 
-    # Exposer les fonctions de mise à jour
+    # Injection des callbacks dans entity_board
     entity_board.update_entity_name = update_entity_name
-    entity_board.delete_entity = delete_entity
+    entity_board.handle_delete_entity = handle_delete_entity
 
 
 def main():
     """Point d'entrée principal de l'interface :
     initialise la fenêtre et les composants."""
     logger.info("Starting application")
-
     clean_folders()
-
     root = create_main_window()
     apply_style(root)
+    load_icons()
     setup_main_interface(root, dev_mode=True)
     create_menu_bar(root)
     root.mainloop()
