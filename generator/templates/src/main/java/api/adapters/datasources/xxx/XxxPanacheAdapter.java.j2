@@ -1,8 +1,8 @@
-package com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }};
+package {{ package_name }}.api.adapters.datasources.{{ table }};
 
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.model.{{ Table }}Entity;
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.{{ Table }}DatasourcePort;
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }};
+import {{ package_name }}.api.adapters.datasources.{{ table }}.model.{{ Table }}Entity;
+import {{ package_name }}.api.application.{{ table }}.{{ Table }}DatasourcePort;
+import {{ package_name }}.api.application.{{ table }}.model.{{ Table }};
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;

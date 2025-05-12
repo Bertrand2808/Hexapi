@@ -1,8 +1,8 @@
-package com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }};
+package {{ package_name }}.api.application.{{ table }};
 
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }};
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.application.{{ table }}.model.{{ Table }}Schema;
-import com.{{ company.lowercase }}.{{ project.lowercase }}.api.adapters.datasources.{{ table }}.{{ Table }}Repository;
+import {{ package_name }}.api.application.{{ table }}.model.{{ Table }};
+import {{ package_name }}.api.application.{{ table }}.model.{{ Table }}Schema;
+import {{ package_name }}.api.adapters.datasources.{{ table }}.{{ Table }}Repository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

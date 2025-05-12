@@ -13,7 +13,7 @@ Un générateur d'API Java hexagonale basé sur des entités définies par l'uti
 
 ```bash
 .\.venv\Scripts\activate
-python generator.py
+python main.py
 ```
 
 ## 🔍 Analyse SonarQube

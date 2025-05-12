@@ -6,3 +6,4 @@ scripts_ignored/
 output/
 temp/*
 temp/
+logs/
