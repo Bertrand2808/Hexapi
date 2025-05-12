@@ -30,6 +30,9 @@ from generator.gui.style import (
 )
 from generator.scripts.generate_entity import generate_all_templates
 
+# === Constants ===
+VERSION = "0.0.1"
+
 
 def clean_folders():
     """Nettoie le dossier temp au lancement de l'application."""
@@ -553,6 +556,14 @@ def setup_main_interface(root, dev_mode=False):
         style="TButton",
     )
     generate_btn.pack(pady=(30, 20), anchor="center")
+
+    # Version label
+    version_label = make_label(
+        bottom_frame,
+        f"Version {VERSION}",
+        size=10,
+    )
+    version_label.pack(pady=(0, 10), anchor="center")
 
     # Exposer les fonctions de mise à jour
     entity_board.update_entity_name = update_entity_name
