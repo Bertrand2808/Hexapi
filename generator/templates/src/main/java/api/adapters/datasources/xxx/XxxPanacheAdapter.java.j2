@@ -17,7 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class {{ Table }}PanacheAdapter implements PanacheRepository<{{ Table }}Entity>, {{ Table }}DatasourcePort {
 
+    {% if fields and fields|length > 0 %}
     private static final String ID_EQUALS_ID = "{{ fields[0].nom }}=:{{ fields[0].nom }}";
+    {% else %}
+    private static final String ID_EQUALS_ID = "id=:id";
+    {% endif %}
 
     /**
      * Persiste un {{ table }} et retourne le {{ table }} persisté.
@@ -34,13 +38,13 @@ class {{ Table }}PanacheAdapter implements PanacheRepository<{{ Table }}Entity>,
 
     /**
      * Met à jour un {{ table }} existant.
-     * @param {{ fields[0].nom }} l'identifiant du {{ table }} à mettre à jour
+     * @param {{ fields[0].nom if fields and fields|length > 0 else 'id' }} l'identifiant du {{ table }} à mettre à jour
      * @param {{ table }} le {{ table }} à mettre à jour
      */
     @Override
-    public void update({{ fields[0].type }} {{ fields[0].nom }}, {{ Table }} {{ table }}) {
+    public void update({{ fields[0].type if fields and fields|length > 0 else 'Long' }} {{ fields[0].nom if fields and fields|length > 0 else 'id' }}, {{ Table }} {{ table }}) {
         LOG.debug("Update {{ table }} {}", {{ table }});
-        var entity = find(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ fields[0].nom }})).firstResult();
+        var entity = find(ID_EQUALS_ID, Map.of("{{ fields[0].nom if fields and fields|length > 0 else 'id' }}", {{ fields[0].nom if fields and fields|length > 0 else 'id' }})).firstResult();
         boolean modification = false;
         {%- for f in fields if not f.isId %}
         if (!{{ table }}.{{ f.nom }}().equals(entity.get{{ f.nom|capitalize }}())) {
@@ -67,13 +71,13 @@ class {{ Table }}PanacheAdapter implements PanacheRepository<{{ Table }}Entity>,
 
     /**
      * Récupère un {{ table }} par son identifiant.
-     * @param {{ fields[0].nom }} l'identifiant du {{ table }}
+     * @param {{ fields[0].nom if fields and fields|length > 0 else 'id' }} l'identifiant du {{ table }}
      * @return le {{ table }} trouvé, ou null si non trouvé
      */
     @Override
-    public @Nullable {{ Table }} getBy{{ fields[0].nom|capitalize }}({{ fields[0].type }} {{ fields[0].nom }}) {
+    public @Nullable {{ Table }} getBy{{ fields[0].nom|capitalize if fields and fields|length > 0 else 'Id' }}({{ fields[0].type if fields and fields|length > 0 else 'Long' }} {{ fields[0].nom if fields and fields|length > 0 else 'id' }}) {
         var result = {{ Table }}Mapper.of(
-            find(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ fields[0].nom }})).firstResult()
+            find(ID_EQUALS_ID, Map.of("{{ fields[0].nom if fields and fields|length > 0 else 'id' }}", {{ fields[0].nom if fields and fields|length > 0 else 'id' }})).firstResult()
         );
         LOG.debug("Found {{ table }}: {}", result);
         return result;
@@ -86,8 +90,8 @@ class {{ Table }}PanacheAdapter implements PanacheRepository<{{ Table }}Entity>,
      */
     @Override
     public long delete({{ Table }} {{ table }}) {
-        var deleted = delete(ID_EQUALS_ID, Map.of("{{ fields[0].nom }}", {{ table }}.{{ fields[0].nom }}()));
-        LOG.debug("Deleted {} row(s) for {{ table }} {}", deleted, {{ table }}.{{ fields[0].nom }}());
+        var deleted = delete(ID_EQUALS_ID, Map.of("{{ fields[0].nom if fields and fields|length > 0 else 'id' }}", {{ table }}.{{ fields[0].nom if fields and fields|length > 0 else 'id' }}()));
+        LOG.debug("Deleted {} row(s) for {{ table }} {}", deleted, {{ table }}.{{ fields[0].nom if fields and fields|length > 0 else 'id' }}());
         return deleted;
     }
 }

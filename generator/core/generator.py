@@ -1,3 +1,9 @@
+"""
+Module containing the generator.
+
+date: 05/06/2025
+"""
+
 import json
 import os
 
@@ -6,8 +12,7 @@ from generator.core.naming import to_camel_case, to_kebab_case, to_pascal_case
 
 def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
     """
-    Prend le nom brut de l'entité et la liste des widgets de champ,
-    retourne le dictionnaire JSON à écrire.
+    Build the entity data.
     """
     entity_pascal = to_pascal_case(entity_name)
     entity_camel = to_camel_case(entity_name)
@@ -59,6 +64,9 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
 
 
 def save_entity_json(entity_name: str, data: dict, output_dir="output") -> str:
+    """
+    Save the entity data to a JSON file.
+    """
     os.makedirs(output_dir, exist_ok=True)
     filepath = os.path.join(output_dir, f"{entity_name}.json")
     with open(filepath, "w", encoding="utf-8") as f:

@@ -1,3 +1,9 @@
+"""
+Module containing the EntityEditorWindow class.
+
+date: 05/06/2025
+"""
+
 import json
 import os
 import tkinter as tk
@@ -5,59 +11,70 @@ from tkinter import ttk
 
 from generator.core.fake_utils import get_fake_value
 from generator.core.logger import logger
-from generator.gui.style import (
-    BG_DARK,
-    BG_LIGHT,
-    FONT_FAMILY,
-    FONT_SIZE_LABEL,
-    PADDING,
-    TEXT_COLOR,
-)
+from generator.gui.style import FONT_FAMILY, FONT_SIZE_LABEL, PADDING
+from generator.gui.theme_manager import theme_manager
+from generator.gui.utils.theme_utils import apply_theme_recursive
 from generator.gui.widgets import add_field, create_scrollable_fields_frame
 
 
 class EntityEditorWindow(tk.Toplevel):
     """
-    Fenêtre d'édition pour une entité.
-    Permet d'ajouter/modifier des champs.
+    Class representing the entity editor window.
     """
 
     def __init__(self, master, entity_name, on_name_change, dev_mode=False):
-        logger.info("Création de la fenêtre d'édition pour %s", entity_name)
+        """
+        Initialize the entity editor window.
+        """
         super().__init__(master)
         self.title(f"Édition - {entity_name}")
         self.geometry("1000x600")
-        self.configure(bg=BG_DARK)
-        self._name_changed = False
         self.entity_name = entity_name
         self.on_name_change = on_name_change
         self.dev_mode = dev_mode
         self.fields = []
-
+        self._name_changed = False
+        self._theme_callback = self.apply_theme
         self._build_ui()
         self._load_data()
+        self.apply_theme()
+        theme_manager.subscribe(self._theme_callback)
 
-        # Sauvegarder les données quand la fenêtre est fermée
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
-        logger.info("Fenêtre d'édition pour %s créée", entity_name)
+
+    def apply_theme(self):
+        """
+        Apply the theme to the entity editor.
+        """
+        if not self.winfo_exists():
+            logger.warning("apply_theme() called on destroyed window")
+            return
+        logger.info("apply_theme() called on %s", self.entity_name)
+        self.configure(bg=theme_manager.get("BG"))
+        apply_theme_recursive(self)
 
     def _build_ui(self):
-        logger.info("Construction de l'interface utilisateur pour %s", self.entity_name)
-
-        # Container principal avec padding
-        main_container = tk.Frame(self, bg=self["bg"], padx=PADDING, pady=PADDING)
+        """
+        Build the UI of the entity editor.
+        """
+        main_container = tk.Frame(
+            self,
+            bg=theme_manager.get("BG_BOX"),
+            padx=PADDING,
+            pady=PADDING,
+        )
         main_container.pack(fill="both", expand=True)
 
-        # Section Nom Entité en ligne
-        top_row = tk.Frame(main_container, bg=self["bg"])
+        # === Top row : entity name
+        top_row = tk.Frame(main_container, bg=theme_manager.get("BG_BOX"))
         top_row.pack(fill="x", pady=(0, PADDING))
 
         name_label = tk.Label(
             top_row,
-            text="Nom Entité :",
+            text="Entity Name :",
             font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
-            fg=TEXT_COLOR,
-            bg=self["bg"],
+            fg=theme_manager.get("TEXT_COLOR"),
+            bg=theme_manager.get("BG_BOX"),
         )
         name_label.pack(side="left", padx=(0, 8))
 
@@ -65,29 +82,31 @@ class EntityEditorWindow(tk.Toplevel):
             top_row,
             width=30,
             font=(FONT_FAMILY, FONT_SIZE_LABEL),
+            style="CleanDark.TEntry",
         )
-        self.name_entry.pack(side="left", fill="x", expand=True)
         self.name_entry.insert(0, self.entity_name)
+        self.name_entry.pack(side="left", fill="x", expand=True)
 
-        # Section des champs
+        # === Fields section
         fields_section = tk.LabelFrame(
             main_container,
-            text="Champs",
+            text="Fields",
             padx=PADDING,
             pady=PADDING,
-            bg=BG_LIGHT,
             font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
+            bg=theme_manager.get("BG_BOX"),
+            fg=theme_manager.get("TEXT_COLOR"),
         )
         fields_section.pack(fill="both", expand=True, pady=(0, PADDING))
 
-        # Frame scrollable pour les champs
         self.fields_frame = create_scrollable_fields_frame(
             fields_section,
-            bg_color=BG_LIGHT,
+            bg_color=theme_manager.get("BG_BOX"),
             entity_name=self.entity_name,
         )
 
-        buttons_frame = tk.Frame(main_container, bg=self["bg"])
+        # === Footer with buttons
+        buttons_frame = tk.Frame(main_container, bg=theme_manager.get("BG_BOX"))
         buttons_frame.pack(fill="x", pady=(PADDING, 0))
 
         def add_auto_field():
@@ -102,49 +121,43 @@ class EntityEditorWindow(tk.Toplevel):
             }
             add_field(self.fields_frame, field_data)
 
-        # Ajouter Entité (icône + texte)
-        add_field_btn = ttk.Button(
+        ttk.Button(
             buttons_frame,
             text="➕ Add Field",
             command=add_auto_field,
             style="TButton",
             cursor="hand2",
-        )
-        add_field_btn.pack(side="left", padx=(0, 8))
+        ).pack(side="left", padx=(0, 8))
 
-        # Géné auto
         if self.dev_mode:
-            generate_btn = ttk.Button(
+            ttk.Button(
                 buttons_frame,
-                text="[DEV] Générer auto",
+                text="[DEV] Generate auto",
+                command=self._generate_fake_data,
                 style="TButton",
                 cursor="hand2",
-                command=self._generate_fake_data,
-            )
-            generate_btn.pack(side="left", padx=(0, 8))
+            ).pack(side="left", padx=(0, 8))
 
-        # Nettoyer
-        clear_btn = ttk.Button(
+        ttk.Button(
             buttons_frame,
-            text="🧹 Nettoyer",
-            command=lambda: self._clear_fields(),
+            text="🧹 Clean",
+            command=self._clear_fields,
             style="Red.TButton",
             cursor="hand2",
-        )
-        clear_btn.pack(side="right", padx=(8, 0))
+        ).pack(side="right", padx=(8, 0))
 
-        # Valider
-        validate_btn = ttk.Button(
+        ttk.Button(
             buttons_frame,
-            text="✅ Valider",
+            text="✅ Validate",
             command=self._save_data,
             style="Green.TButton",
             cursor="hand2",
-        )
-        validate_btn.pack(side="right")
+        ).pack(side="right")
 
     def _load_data(self):
-        """Charge les données de l'entité depuis le fichier JSON."""
+        """
+        Load the data from the JSON file.
+        """
         json_path = f"temp/{self.entity_name}.json"
         if os.path.exists(json_path):
             try:
@@ -153,21 +166,19 @@ class EntityEditorWindow(tk.Toplevel):
                     for field_data in data:
                         add_field(self.fields_frame, field_data)
             except Exception as e:
-                logger.error("Erreur lors du chargement des données: %s", e)
+                logger.error("Error loading JSON %s: %s", self.entity_name, e)
 
     def _save_data(self):
-        """Sauvegarde les données de l'entité dans un fichier JSON."""
+        """
+        Save the data to the JSON file.
+        """
         try:
-            # Récupérer le nom de l'entité
             new_name = self.name_entry.get().strip()
-            # Vérifie si le nom a changé
             name_changed = new_name and new_name != self.entity_name
             old_name = self.entity_name
             if name_changed:
-                # On change tout de suite pour éviter conflits de fichiers
                 self.entity_name = new_name
 
-            # Récupérer les données des champs
             fields_data = []
             for field_widget in self.fields_frame.winfo_children():
                 if isinstance(field_widget, tk.Frame):
@@ -181,81 +192,151 @@ class EntityEditorWindow(tk.Toplevel):
                     }
                     fields_data.append(field_data)
 
-            # Sauvegarder dans un fichier JSON
-            json_path = f"temp/{self.entity_name}.json"
-            with open(json_path, "w", encoding="utf-8") as f:
+            # Save in the new file first
+            new_json_path = f"temp/{self.entity_name}.json"
+            with open(new_json_path, "w", encoding="utf-8") as f:
                 json.dump(fields_data, f, indent=2)
+
+            # If the name has changed, delete the old file
+            if name_changed:
+                old_json_path = f"temp/{old_name}.json"
+                if os.path.exists(old_json_path):
+                    try:
+                        os.remove(old_json_path)
+                    except OSError as e:
+                        logger.warning(
+                            "Could not delete old file %s: %s",
+                            old_json_path,
+                            e,
+                        )
 
             if name_changed and not self._name_changed:
                 self._name_changed = True
                 self.on_name_change(old_name, new_name)
 
-            logger.info("Données sauvegardées pour %s", self.entity_name)
+            logger.info("Data saved for %s", self.entity_name)
             self.destroy()
 
         except Exception as e:
-            logger.error("Erreur lors de la sauvegarde des données: %s", e)
+            logger.error("Error saving %s: %s", self.entity_name, e)
 
     def _on_closing(self):
-        """Appelé quand la fenêtre est fermée."""
+        """
+        Handle the closing event of the entity editor.
+        """
         try:
+            theme_manager.unsubscribe(self._theme_callback)
             if not hasattr(self, "_is_being_deleted"):
                 self._save_data()
         except Exception as e:
-            logger.error("Erreur lors de la fermeture: %s", e)
+            logger.error("Error closing %s: %s", self.entity_name, e)
         finally:
             self.destroy()
 
     def _clear_fields(self):
+        """
+        Clear the fields of the entity editor.
+        """
         for widget in self.fields_frame.winfo_children():
             widget.destroy()
 
     def _generate_fake_data(self):
-        """Génère des données fake pour les champs."""
+        """
+        Generate fake data for the entity editor.
+        """
         self._clear_fields()
-        from generator.core.fake_utils import get_fake_value
 
-        fake_fields = [
-            {
-                "name": "id",
-                "type": "Long",
-                "comment": "ID unique",
-                "test_value": get_fake_value("Long"),
-                "is_id": True,
-                "nullable": False,
-            },
-            {
-                "name": "name",
-                "type": "String",
-                "comment": "Nom de l'entité",
-                "test_value": get_fake_value("String"),
-                "is_id": False,
-                "nullable": True,
-            },
-            {
-                "name": "description",
-                "type": "String",
-                "comment": "Description de l'entité",
-                "test_value": get_fake_value("String"),
-                "is_id": False,
-                "nullable": True,
-            },
-            {
-                "name": "created_at",
-                "type": "LocalDateTime",
-                "comment": "Date de création",
-                "test_value": get_fake_value("LocalDateTime"),
-                "is_id": False,
-                "nullable": True,
-            },
-            {
-                "name": "updated_at",
-                "type": "LocalDateTime",
-                "comment": "Date de mise à jour",
-                "test_value": get_fake_value("LocalDateTime"),
-                "is_id": False,
-                "nullable": True,
-            },
-        ]
-        for field_data in fake_fields:
-            add_field(self.fields_frame, field_data)
+        # Create a custom modal dialog window
+        dialog = tk.Toplevel(self)
+        dialog.title("Generate fake data")
+        dialog.geometry("300x150")
+        dialog.configure(bg=theme_manager.get("BG_BOX"))
+        dialog.transient(self)  # Make the window stay on top of its parent
+        dialog.grab_set()  # Make the window modal
+
+        # Center the window
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = (dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (dialog.winfo_screenheight() // 2) - (height // 2)
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
+
+        # Message
+        message = tk.Label(
+            dialog,
+            text="Do you want to generate fake data?",
+            font=(FONT_FAMILY, FONT_SIZE_LABEL),
+            bg=theme_manager.get("BG_BOX"),
+            fg=theme_manager.get("TEXT_COLOR"),
+        )
+        message.pack(pady=(20, 20))
+
+        # Buttons
+        buttons_frame = tk.Frame(dialog, bg=theme_manager.get("BG_BOX"))
+        buttons_frame.pack(pady=(0, 20))
+
+        def on_yes():
+            dialog.destroy()
+            fake_fields = [
+                {
+                    "name": "id",
+                    "type": "Long",
+                    "comment": "Unique ID",
+                    "test_value": get_fake_value("Long"),
+                    "is_id": True,
+                    "nullable": False,
+                },
+                {
+                    "name": "name",
+                    "type": "String",
+                    "comment": "Entity name",
+                    "test_value": get_fake_value("String"),
+                    "is_id": False,
+                    "nullable": True,
+                },
+                {
+                    "name": "description",
+                    "type": "String",
+                    "comment": "Entity description",
+                    "test_value": get_fake_value("String"),
+                    "is_id": False,
+                    "nullable": True,
+                },
+                {
+                    "name": "created_at",
+                    "type": "LocalDateTime",
+                    "comment": "Creation date",
+                    "test_value": get_fake_value("LocalDateTime"),
+                    "is_id": False,
+                    "nullable": True,
+                },
+                {
+                    "name": "updated_at",
+                    "type": "LocalDateTime",
+                    "comment": "Update date",
+                    "test_value": get_fake_value("LocalDateTime"),
+                    "is_id": False,
+                    "nullable": True,
+                },
+            ]
+            for field_data in fake_fields:
+                add_field(self.fields_frame, field_data)
+
+        def on_no():
+            dialog.destroy()
+
+        ttk.Button(
+            buttons_frame,
+            text="Yes",
+            command=on_yes,
+            style="Green.TButton",
+            cursor="hand2",
+        ).pack(side="left", padx=(0, 10))
+
+        ttk.Button(
+            buttons_frame, text="No", command=on_no, style="TButton", cursor="hand2"
+        ).pack(side="left")
+
+        # Wait for the window to be closed
+        dialog.wait_window()

@@ -1,0 +1,15 @@
+Roadmap HexAPI Generator
+=====================
+
+Fonctionnalités en cours de développement :
+- Génération d'un fichier contenant les dépendances Maven à ajouter dans le pom.xml
+- Support des relations entre entités (One-to-One, One-to-Many, Many-to-Many)
+- Génération de tests unitaires automatiques
+- Support des enums et des types personnalisés
+- Interface de configuration des templates
+- Export/Import de projets
+- Support des validations de champs
+- Génération de documentation API
+- Interface de prévisualisation des templates
+
+Signé, Bertrand.

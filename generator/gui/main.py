@@ -1,41 +1,41 @@
-"""Module principal de l'interface graphique HexAPI Generator."""
+"""
+Module containing the main window.
+
+date: 05/06/2025
+"""
 
 # === Imports ===
 import json
 import os
 import shutil
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from generator.core.logger import logger
 from generator.gui.layout.entity_board import EntityBoard
 from generator.gui.layout.entity_editor import EntityEditorWindow
 from generator.gui.layout.project_header import ProjectHeader
 from generator.gui.menubar import create_menu_bar
-from generator.gui.style import (
-    ACCENT_COLOR,
-    ACCENT_HOVER,
-    BG_DARK,
-    BG_LIGHT,
-    BG_LIGHTER,
-    BORDER_COLOR,
-    ERROR_COLOR,
-    FONT_FAMILY,
-    FONT_SIZE_LABEL,
-    LABELFRAME_BG,
-    PADDING,
-    SUCCESS_COLOR,
-    TEXT_COLOR,
-)
+from generator.gui.style import FONT_FAMILY, FONT_SIZE_LABEL, PADDING, apply_style
+from generator.gui.theme_manager import theme_manager
 from generator.gui.widgets import load_icons
 from generator.scripts.generate_entity import generate_all_templates
 
 # === Constants ===
-VERSION = "0.0.1"
+VERSION = "0.0.1"  # Version of the application
+WINDOW_TITLE = "HexAPI Generator"
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 900
+WINDOW_MIN_WIDTH = 1000
+WINDOW_MIN_HEIGHT = 700
+
+ui_refs = {}  # References to the UI elements
 
 
 def clean_folders():
-    """Nettoie le dossier temp au lancement de l'application."""
+    """
+    Clean the temp and output folders.
+    """
     temp_dir = "temp"
     output_dir = "output"
     if os.path.exists(temp_dir):
@@ -52,151 +52,27 @@ def clean_folders():
 
 
 def create_main_window():
-    """Crée et configure la fenêtre principale de l'application."""
+    """
+    Create and configure the main window.
+    """
     root = tk.Tk()
-    root.title("HexAPI Generator")
-    root.geometry("1200x900")
-    root.configure(bg=BG_DARK)
-    root.minsize(1000, 700)  # Taille minimale de la fenêtre
+    root.title(WINDOW_TITLE)
+    root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+    root.configure(bg=theme_manager.get("BG"))
+    root.minsize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
     return root
 
 
-def apply_style(root):
-    """Applique le thème clair et les styles personnalisés aux composants Tkinter."""
-    style = ttk.Style(root)
-    style.theme_use("clam")
-
-    # Style général
-    style.configure(
-        ".",
-        background=BG_DARK,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-    )
-
-    # Labels
-    style.configure(
-        "TLabel",
-        background=BG_DARK,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-    )
-
-    # Entrées
-    style.configure(
-        "TEntry",
-        fieldbackground=BG_LIGHTER,
-        foreground=TEXT_COLOR,
-        borderwidth=1,
-        relief="solid",
-        padding=12,
-        bordercolor=BORDER_COLOR,
-    )
-
-    # Combobox
-    style.configure(
-        "Custom.TCombobox",
-        fieldbackground=BG_LIGHTER,
-        background=BG_LIGHTER,
-        foreground=TEXT_COLOR,
-        arrowcolor=TEXT_COLOR,
-        bordercolor=BORDER_COLOR,
-        selectbackground=ACCENT_COLOR,
-        selectforeground="white",
-        padding=12,
-    )
-
-    style.map(
-        "Custom.TCombobox",
-        fieldbackground=[("readonly", BG_LIGHTER)],
-        foreground=[("readonly", TEXT_COLOR)],
-        background=[("readonly", BG_LIGHTER)],
-    )
-
-    # Boutons
-    style.configure(
-        "TButton",
-        background=ACCENT_COLOR,
-        foreground="white",
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-        padding=12,
-        borderwidth=0,
-        relief="flat",
-    )
-    style.map(
-        "TButton",
-        background=[("active", ACCENT_HOVER)],
-        foreground=[("active", "white")],
-    )
-
-    # Frames avec label
-    style.configure(
-        "Custom.TLabelframe",
-        background=LABELFRAME_BG,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-        borderwidth=1,
-        relief="solid",
-        padding=24,
-    )
-    style.configure(
-        "Custom.TLabelframe.Label",
-        background=LABELFRAME_BG,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL, "bold"),
-    )
-
-    # Checkbuttons
-    style.configure(
-        "Custom.TCheckbutton",
-        background=BG_LIGHT,
-        foreground=TEXT_COLOR,
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-    )
-
-    # Bouton primaire
-    style.configure(
-        "Green.TButton",
-        background=SUCCESS_COLOR,
-        foreground="white",
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-        padding=12,
-        borderwidth=0,
-        relief="flat",
-    )
-
-    style.map(
-        "Green.TButton",
-        background=[("active", "#218838")],
-        foreground=[("active", "white")],
-    )
-
-    # Bouton secondaire
-    style.configure(
-        "Red.TButton",
-        background=ERROR_COLOR,
-        foreground="white",
-        font=(FONT_FAMILY, FONT_SIZE_LABEL),
-        padding=12,
-        borderwidth=0,
-        relief="flat",
-    )
-
-    style.map(
-        "Red.TButton",
-        background=[("active", "#c82333")],
-        foreground=[("active", "white")],
-    )
-
-
 def make_label(parent, text, size=FONT_SIZE_LABEL, bold=False):
-    """Crée un label stylisé avec les couleurs et polices de l'application."""
+    """
+    Create a styled label with the colors and fonts of the application.
+    """
     font_weight = "bold" if bold else "normal"
     return tk.Label(
         parent,
         text=text,
         font=(FONT_FAMILY, size, font_weight),
-        fg=TEXT_COLOR,
+        fg=theme_manager.get("TEXT_COLOR"),
         bg=parent["bg"],
     )
 
@@ -207,7 +83,7 @@ def show_error_message(parent, message):
     dialog = tk.Toplevel(parent)
     dialog.title("Error")
     dialog.geometry("500x200")
-    dialog.configure(bg=BG_LIGHT)
+    dialog.configure(bg=theme_manager.get("BG_BOX"))
     dialog.transient(parent)
     dialog.grab_set()
 
@@ -241,11 +117,14 @@ def show_error_message(parent, message):
 
 
 def setup_main_interface(root, dev_mode=False):
-    """Construit l'interface utilisateur principale : formulaires, champs et boutons."""
+    """
+    Setup the main interface.
+    """
+
     entities_data = {}  # {entity_name: {fields: [field_data]}}
     entity_editors = {}  # {entity_name: EntityEditorWindow}
 
-    # --- Fonctions internes (doivent être définies avant l'utilisation) ---
+    # --- Internal functions (must be defined before use) ---
     def open_entity_editor(entity_name):
         logger.info("Opening editor for %s", entity_name)
         if entity_name in entity_editors:
@@ -266,13 +145,15 @@ def setup_main_interface(root, dev_mode=False):
         entity_editors[entity_name] = editor
 
     def create_entity():
-        """Crée une nouvelle entité avec un nom par défaut,
-        puis ouvre directement l'éditeur."""
+        """
+        Create a new entity with a default name,
+        then open the editor directly.
+        """
         base_name = "NouvelleEntite"
         suffix = 1
         name = base_name
 
-        # Générer un nom unique
+        # Generate a unique name
         while name in entities_data:
             name = f"{base_name}{suffix}"
             suffix += 1
@@ -282,11 +163,13 @@ def setup_main_interface(root, dev_mode=False):
         entity_board.add_entity(name)
         open_entity_editor(name)
 
-    # Ajoute un set pour suivre les opérations en cours
+    # Add a set to track the operations in progress
     operations_in_progress = set()
 
     def handle_delete_entity(entity_name):
-        """Supprime une entité et ses ressources associées."""
+        """
+        Delete an entity and its associated resources.
+        """
         operation_key = f"delete_{entity_name}"
         if operation_key in operations_in_progress:
             logger.info("Skipping recursive deletion of %s", entity_name)
@@ -296,23 +179,21 @@ def setup_main_interface(root, dev_mode=False):
         try:
             logger.info("Deleting entity %s", entity_name)
 
-            # Fermer l'éditeur s'il est ouvert
+            # Close the editor if it is open
             if entity_name in entity_editors:
                 try:
                     editor = entity_editors[entity_name]
-                    editor._is_being_deleted = (
-                        True  # Marquer l'éditeur comme en cours de suppression
-                    )
+                    editor._is_being_deleted = True  # Mark the editor as being deleted
                     editor.destroy()
                 except tk.TclError:
-                    pass  # L'éditeur est déjà fermé
+                    pass  # The editor is already closed
                 del entity_editors[entity_name]
 
-            # Supprimer les données de l'entité
+            # Delete the entity data
             if entity_name in entities_data:
                 del entities_data[entity_name]
 
-            # Supprimer le fichier JSON temporaire
+            # Delete the temporary JSON file
             json_path = f"temp/{entity_name}.json"
             if os.path.exists(json_path):
                 logger.info("Deleting temporary JSON file %s", json_path)
@@ -321,7 +202,7 @@ def setup_main_interface(root, dev_mode=False):
                 except OSError as e:
                     logger.error("Error deleting JSON file: %s", e)
 
-            # Supprimer l'entité du board
+            # Delete the entity from the board
             if entity_name in entity_board.entities:
                 entity_board.delete_entity(entity_name)
                 logger.info("Entity %s deleted from board", entity_name)
@@ -329,10 +210,13 @@ def setup_main_interface(root, dev_mode=False):
             operations_in_progress.remove(operation_key)
 
     def generate_all_entities():
+        """
+        Generate all entities.
+        """
         logger.info("Generating all entities")
         company = header.get_company()
         project = header.get_project()
-
+        package = header.get_package()
         if not company:
             show_error_message(root, "The company name cannot be empty")
             return
@@ -340,9 +224,23 @@ def setup_main_interface(root, dev_mode=False):
             show_error_message(root, "The project name cannot be empty")
             return
 
+        # Check if entities are set
+        if not entities_data:
+            show_error_message(root, "No entities have been created yet")
+            return
+
+        # Ask the user to choose the output directory
+        output_dir = filedialog.askdirectory(
+            title="Choisir le dossier de destination",
+            initialdir=os.path.abspath("output"),
+        )
+
+        if not output_dir:  # If the user cancels the selection
+            return
+
         for entity_name, editor in list(entity_editors.items()):
             try:
-                # Vérifier si l'éditeur existe toujours
+                # Check if the editor still exists
                 try:
                     editor.winfo_exists()
                 except tk.TclError:
@@ -352,10 +250,31 @@ def setup_main_interface(root, dev_mode=False):
                     del entity_editors[entity_name]
                     continue
 
-                # Récupérer les données depuis le fichier JSON temporaire
+                # Get the data from the temporary JSON file
                 json_path = f"temp/{entity_name}.json"
                 with open(json_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
+
+                # Inject meta datas
+                data = {
+                    "company": {
+                        "lowercase": company.lower(),
+                        "uppercase": company.upper(),
+                    },
+                    "project": {
+                        "lowercase": project.lower(),
+                        "uppercase": project.upper(),
+                    },
+                    "package_name": package,
+                    "table": entity_name.lower(),
+                    "Table": entity_name[0].upper() + entity_name[1:],
+                    "fields": data,
+                }
+                logger.info("Injecting meta datas for %s", entity_name)
+
+                # Save the data
+                with open(json_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4)
 
                 if not data:
                     show_error_message(
@@ -368,18 +287,21 @@ def setup_main_interface(root, dev_mode=False):
                 if not os.path.exists(json_path):
                     logger.error("File JSON not found for %s", entity_name)
                     continue
-
                 logger.info("Generating templates for %s", entity_name)
-                generate_all_templates(json_path=json_path)
+                generate_all_templates(json_path=json_path, output_root=output_dir)
             except Exception as e:
                 logger.error("Error generating %s: %s", entity_name, e)
                 show_error_message(root, f"Error generating {entity_name}: {e}")
                 return
         messagebox.showinfo(
-            "Generation completed", "All entities have been generated successfully"
+            "Generation completed",
+            f"All entities have been generated successfully in {output_dir}",
         )
 
     def update_entity_name(old_name, new_name):
+        """
+        Update the name of an entity.
+        """
         operation_key = f"rename_{old_name}_{new_name}"
         if operation_key in operations_in_progress:
             logger.info("Skipping recursive update from %s to %s", old_name, new_name)
@@ -402,7 +324,7 @@ def setup_main_interface(root, dev_mode=False):
             if old_name in entities_data:
                 entities_data[new_name] = entities_data.pop(old_name)
 
-            # Renommer le fichier JSON si nécessaire
+            # Rename the JSON file if necessary
             old_json_path = f"temp/{old_name}.json"
             new_json_path = f"temp/{new_name}.json"
             if os.path.exists(old_json_path):
@@ -416,8 +338,9 @@ def setup_main_interface(root, dev_mode=False):
         finally:
             operations_in_progress.remove(operation_key)
 
-    # --- Layout principal ---
-    main_container = tk.Frame(root, bg=BG_DARK)
+    # --- Main layout ---
+    main_container = tk.Frame(root, bg=theme_manager.get("ACCENT_COLOR"))
+    print(main_container["bg"])
     main_container.grid(row=0, column=0, sticky="nsew")
     root.grid_rowconfigure(0, weight=1)
     root.grid_columnconfigure(0, weight=1)
@@ -425,8 +348,8 @@ def setup_main_interface(root, dev_mode=False):
     main_container.grid_rowconfigure(1, weight=1)
     main_container.grid_columnconfigure(0, weight=1)
 
-    # Ligne pour le titre
-    title_frame = tk.Frame(main_container, bg=BG_DARK)
+    # Line for the title
+    title_frame = tk.Frame(main_container, bg=theme_manager.get("BG"))
     title_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
     title_label = make_label(
         title_frame,
@@ -436,20 +359,25 @@ def setup_main_interface(root, dev_mode=False):
     )
     title_label.pack(pady=(8, 0), anchor="center")
 
-    # --- Zone haute divisée en 2 parties ---
-    top_frame = tk.Frame(main_container, bg=BG_DARK)
+    # --- Top zone divided into 2 parts ---
+    top_frame = tk.Frame(main_container, bg=theme_manager.get("BG"))
     top_frame.grid(row=1, column=0, sticky="nsew")
     top_frame.grid_rowconfigure(0, weight=1)
     top_frame.grid_columnconfigure(0, weight=0, minsize=420)
     top_frame.grid_columnconfigure(1, weight=2)
 
-    # --- Colonne gauche : project header ---
+    # --- Left column : project header ---
     header = ProjectHeader(top_frame, width=360, height=400)
     header.grid(row=0, column=0, sticky="n", padx=(PADDING * 2, PADDING), pady=PADDING)
     header.grid_propagate(False)
 
-    # --- Colonne droite : entités ---
-    entity_section_container = tk.Frame(top_frame, bg=BG_LIGHT, padx=24, pady=24)
+    # --- Right column : entities ---
+    entity_section_container = tk.Frame(
+        top_frame,
+        bg=theme_manager.get("BG_BOX"),
+        padx=24,
+        pady=24,
+    )
     entity_section_container.grid(
         row=0,
         column=1,
@@ -458,6 +386,7 @@ def setup_main_interface(root, dev_mode=False):
         pady=PADDING,
     )
     entity_section_container.grid_rowconfigure(0, weight=1)
+    entity_section_container.grid_columnconfigure(0, weight=1)
 
     entity_board = EntityBoard(
         entity_section_container,
@@ -467,13 +396,13 @@ def setup_main_interface(root, dev_mode=False):
     )
     entity_board.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
-    # --- Zone basse : bouton de génération et version (fixe) ---
-    bottom_frame = tk.Frame(main_container, bg=BG_DARK)
+    # --- Bottom zone : generation button and version (fixed) ---
+    bottom_frame = tk.Frame(main_container, bg=theme_manager.get("BG"))
     bottom_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
     bottom_frame.grid_columnconfigure(0, weight=1)  # Pour centrer le contenu
 
-    # Container pour le bouton et la version
-    bottom_content = tk.Frame(bottom_frame, bg=BG_DARK)
+    # Container for the button and the version
+    bottom_content = tk.Frame(bottom_frame, bg=theme_manager.get("BG"))
     bottom_content.pack(pady=(20, 10))
 
     generate_btn = ttk.Button(
@@ -491,20 +420,83 @@ def setup_main_interface(root, dev_mode=False):
     )
     version_label.pack()
 
-    # Injection des callbacks dans entity_board
+    # Injection of the callbacks in entity_board
     entity_board.update_entity_name = update_entity_name
     entity_board.handle_delete_entity = handle_delete_entity
 
+    ui_refs["main_container"] = main_container
+    ui_refs["title_frame"] = title_frame
+    ui_refs["top_frame"] = top_frame
+    ui_refs["bottom_frame"] = bottom_frame
+    ui_refs["bottom_content"] = bottom_content
+    ui_refs["entity_section_container"] = entity_section_container
+    ui_refs["entity_board"] = entity_board
+    ui_refs["header"] = header
+    ui_refs["title_label"] = title_label
+    ui_refs["generate_btn"] = generate_btn
+    ui_refs["version_label"] = version_label
+
 
 def main():
-    """Point d'entrée principal de l'interface :
-    initialise la fenêtre et les composants."""
+    """
+    Main function.
+    """
     logger.info("Starting application")
     clean_folders()
     root = create_main_window()
     apply_style(root)
     load_icons()
     setup_main_interface(root, dev_mode=True)
+
+    def on_theme_change():
+        """
+        Apply the theme to the main window.
+        """
+        apply_style(root)
+        root.configure(bg=theme_manager.get("BG"))
+
+        for key, widget in ui_refs.items():
+            if widget:
+                try:
+                    if key == "entity_section_container":
+                        widget.configure(bg=theme_manager.get("BG_BOX"))
+                    elif key == "main_container":
+                        widget.configure(bg=theme_manager.get("ACCENT_COLOR"))
+                    elif isinstance(widget, (tk.Frame, tk.Label, tk.Toplevel)):
+                        widget.configure(bg=theme_manager.get("BG"))
+                except Exception as e:
+                    logger.warning("Theme refresh failed for %s: %s", key, e)
+
+        # Update the colors of the specific labels
+        if "title_label" in ui_refs:
+            ui_refs["title_label"].configure(
+                bg=theme_manager.get("BG"), fg=theme_manager.get("TEXT_COLOR")
+            )
+        if "version_label" in ui_refs:
+            ui_refs["version_label"].configure(
+                bg=theme_manager.get("BG"), fg=theme_manager.get("TEXT_COLOR")
+            )
+
+        def refresh_recursively(widget):
+            """
+            Refresh the widget recursively.
+            """
+            try:
+                if hasattr(widget, "apply_theme"):
+                    widget.apply_theme()
+                elif isinstance(widget, tk.Entry):
+                    widget.configure(style="CleanDark.TEntry")
+            except Exception as e:
+                logger.warning("Theme refresh failed for %s: %s", widget, e)
+            for child in widget.winfo_children():
+                refresh_recursively(child)
+
+        refresh_recursively(root)
+
+    theme_manager.subscribe(on_theme_change)
+
+    # Create the menu after the subscription
     create_menu_bar(root)
+
     root.mainloop()
     logger.info("Stopping application")

@@ -1,4 +1,8 @@
-# generator/core/generate_entity.py
+"""
+Module containing the generate_all_templates function.
+
+date: 05/06/2025
+"""
 
 from generator.core.class_generator import render_template_to_output
 from generator.core.logger import logger
@@ -25,23 +29,29 @@ TEMPLATES_TO_GENERATE = [
 ]
 
 
-def generate_all_templates(json_path: str):
-    """Génère tous les templates pour une entité."""
-    logger.info("Début de la génération des templates pour %s", json_path)
+def generate_all_templates(json_path: str, output_root: str = "output"):
+    """
+    Generate all the templates for an entity.
+    """
+    logger.info("Starting the generation of the templates for %s", json_path)
     try:
         for template_path in TEMPLATES_TO_GENERATE:
-            logger.info("Génération du template: %s", template_path)
+            logger.info("Generation of the template: %s", template_path)
             try:
                 render_template_to_output(
-                    json_path=json_path, template_path=template_path
+                    json_path=json_path,
+                    template_path=template_path,
+                    output_root=output_root,
                 )
-                logger.info("Template généré avec succès: %s", template_path)
+                logger.info("Template generated successfully: %s", template_path)
             except Exception as e:
                 logger.error(
-                    "Erreur lors de la génération du template %s: %s", template_path, e
+                    "Error during the generation of the template %s: %s",
+                    template_path,
+                    e,
                 )
                 raise
-        logger.info("Génération des templates terminée pour %s", json_path)
+        logger.info("Generation of the templates completed for %s", json_path)
     except Exception as e:
-        logger.error("Erreur lors de la génération des templates: %s", e)
+        logger.error("Error during the generation of the templates: %s", e)
         raise

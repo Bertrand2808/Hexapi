@@ -1,9 +1,18 @@
+"""
+Module containing the fake utils.
+
+date: 05/06/2025
+"""
+
 from faker import Faker
 
 faker = Faker("fr_FR")  # ou "en_US"
 
 
 def get_fake_value(field_type: str) -> str:
+    """
+    Get a fake value for a given field type.
+    """
     match field_type:
         case "String":
             return faker.first_name()

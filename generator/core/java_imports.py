@@ -1,8 +1,10 @@
 """
-Gestion des imports Java en fonction des types de champs.
+Module containing the Java imports.
+
+date: 05/06/2025
 """
 
-# Mapping des types Java vers leurs imports nécessaires
+# Mapping of Java types to their necessary imports
 TYPE_IMPORTS = {
     "ZonedDateTime": "java.time.ZonedDateTime",
     "LocalDate": "java.time.LocalDate",
@@ -12,7 +14,7 @@ TYPE_IMPORTS = {
     "BigDecimal": "java.math.BigDecimal",
 }
 
-# Imports communs à toutes les entités
+# Common imports for all entities
 COMMON_IMPORTS = [
     "java.io.Serializable",
     "jakarta.persistence.Entity",
@@ -30,13 +32,13 @@ COMMON_IMPORTS = [
 
 def get_required_imports(fields):
     """
-    Retourne la liste des imports nécessaires en fonction des types de champs.
+    Get the required imports for a given list of fields.
 
     Args:
-        fields: Liste des champs de l'entité
+        fields: List of fields of the entity
 
     Returns:
-        Liste des imports nécessaires
+        List of required imports
     """
     imports = set(COMMON_IMPORTS)
 

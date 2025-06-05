@@ -1,4 +1,8 @@
-"""Module for rendering Jinja2 templates into Java class files based on JSON input."""
+"""
+Module for rendering Jinja2 templates into Java class files based on JSON input.
+
+date: 05/06/2025
+"""
 
 import json
 import os
@@ -6,12 +10,14 @@ import re
 
 from jinja2 import Environment, FileSystemLoader
 
-from generator.core.java_imports import get_required_imports
 from generator.core.logger import logger
 
 
 def render_template_to_output(
-    json_path: str, template_path: str, output_root: str = "output"
+    json_path: str,
+    template_path: str,
+    output_root: str = "output",
+    get_required_imports: bool = False,
 ):
     """
     Render a Jinja2 template to a Java file, based on the content of a JSON file.
@@ -37,7 +43,7 @@ def render_template_to_output(
         table = data["table"]
         Table = data["Table"]
 
-        # Convertir le nom du package en chemin
+        # Convert the package name to a path
         package_path = package_name.replace(".", "/")
         logger.info("Package path: %s", package_path)
 
@@ -45,7 +51,7 @@ def render_template_to_output(
         is_resource = "application.properties" in template_path
 
         if is_resource:
-            # Pour les ressources, place dans src/main/resources
+            # For resources, place in src/main/resources
             template_rel_path = template_path.replace(
                 "generator/templates/src/main/resources/", ""
             )
@@ -75,7 +81,7 @@ def render_template_to_output(
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         logger.info("Directories created if necessary: %s", output_path)
 
-        # Configurer l'environnement Jinja2
+        # Configure the Jinja2 environment
         logger.info("Configuring Jinja2 environment")
         env = Environment(
             loader=FileSystemLoader("generator/templates"),
@@ -86,7 +92,7 @@ def render_template_to_output(
             r"(?<!^)(?=[A-Z])", "_", s
         ).lower()
 
-        # Charger et rendre le template
+        # Load and render the template
         logger.info("Loading template: %s", template_path)
         template_path_in_templates = template_path.replace("generator/templates/", "")
         template = env.get_template(template_path_in_templates)
@@ -94,7 +100,7 @@ def render_template_to_output(
         rendered = template.render(**data, get_required_imports=get_required_imports)
         logger.info("Template rendered successfully")
 
-        # Écrire le fichier de sortie
+        # Write the output file
         logger.info("Writing output file: %s", output_path)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(rendered)

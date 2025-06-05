@@ -1,9 +1,17 @@
+"""
+Module containing the naming.
+
+date: 05/06/2025
+"""
+
 import re
 import unicodedata
 
 
 def clean_string(s: str) -> str:
-    # Supprimer les accents, les caractères spéciaux, etc.
+    """
+    Clean the string.
+    """
     nfkd = unicodedata.normalize("NFKD", s)
     no_accents = "".join(c for c in nfkd if not unicodedata.combining(c))
     cleaned = re.sub(r"[^a-zA-Z0-9 ]", "", no_accents)
@@ -11,11 +19,17 @@ def clean_string(s: str) -> str:
 
 
 def to_pascal_case(s: str) -> str:
+    """
+    Convert the string to PascalCase.
+    """
     s = clean_string(s)
     return "".join(word.capitalize() for word in s.split())
 
 
 def to_camel_case(s: str) -> str:
+    """
+    Convert the string to camelCase.
+    """
     s = clean_string(s)
     parts = s.split()
     return (
@@ -24,6 +38,9 @@ def to_camel_case(s: str) -> str:
 
 
 def to_kebab_case(s: str) -> str:
+    """
+    Convert the string to kebab-case.
+    """
     s = clean_string(s)
     kebab = re.sub(r"(?<!^)(?=[A-Z])", "-", s).lower()
     return kebab + "s"  # Pluralisation naïve
@@ -31,7 +48,7 @@ def to_kebab_case(s: str) -> str:
 
 def generate_name_variants(name: str) -> dict:
     """
-    Génère plusieurs formats à partir d’un nom brut.
+    Generate several formats from a raw name.
     """
     s = clean_string(name)
     pascal = to_pascal_case(s)

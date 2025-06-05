@@ -18,17 +18,17 @@ public class {{ Table }}Entity implements Serializable {
     private static final long serialVersionUID = 1L;
 
 {% for field in fields %}
-    {% if field.isId %}
+    {% if field.is_id %}
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     {% endif %}
     {% if field.nullable %}
     @Nullable
     {% endif %}
-    @Column(name = "{{ field.nom | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = {{ field.nullable | default('false') }})
-    // comment: {{ field.comment }}
-    // testValue: {{ field.testValue }}
-    private {{ field.type }} {{ field.nom }};
+    @Column(name = "{{ field.name | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = {{ field.nullable | default(false) | lower }})
+    // comment: {{ field.comment | default('') }}
+    // testValue: {{ field.test_value | default('') }}
+    private {{ field.type }} {{ field.name }};
 
 {% endfor %}
 }
