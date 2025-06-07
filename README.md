@@ -15,9 +15,7 @@ Un générateur d'API Java hexagonale basé sur des entités définies par l'uti
   - Controllers
   - Adapters
   - Datasource ports
-- 🧪 Tests unitaires générés automatiquement
-- 🎨 Interface moderne et responsive
-- 🔄 Gestion des dépendances entre entités
+
 
 ## 🚀 Installation
 
@@ -51,11 +49,7 @@ python main.py
 5. Générer un exécutable :
 
 ```bash
-pyinstaller main.py --name HexAPIGenerator --noconsole --icon=generator/assets/icons/java.png --add-data="config;config" --add-data="generator/templates;generator/templates" --add-data="generator/gui/style.py;generator/gui" --add-data="generator/assets;generator/assets"
-```
-```bash
-pyinstaller --onedir --name="HexAPI Generator" --windowed --icon=generator/assets/icons/java.png --add-data="generator/templates;generator/templates" --add-data="generator/gui/style.py;generator/gui" --hidden-import=jinja2 --hidden-import=tkinter --hidden-import=ttkthemes --collect-all faker --additional-hooks-dir=. --clean main.py
-
+python setup.py build
 ```
 
 ## 📸 Captures d'écran
@@ -83,52 +77,9 @@ hexapi/
 └── temp/             # Fichiers temporaires
 ```
 
-## 🔍 Analyse SonarQube
-
-Ce projet utilise **SonarQube** pour analyser la qualité du code.
-
-### Analyse locale
-
-#### Prérequis
-
-- Docker installé
-- Token SonarQube (généré sur [http://localhost:9000](http://localhost:9000))
-
-#### Commandes
-
-```bash
-make up    # Démarre SonarQube
-make scan  # Lance l'analyse
-make down  # Arrête SonarQube
-```
-
-> ⚠️ Configurez votre token dans `.env` :
->
-> ```env
-> SONAR_TOKEN=votre_token_sonar
-> ```
-
-### Intégration GitHub Actions (à venir)
-
-1. Déployez une instance SonarQube publique
-2. Configurez les secrets GitHub :
-   - `SONAR_TOKEN`
-   - `SONAR_HOST_URL`
-3. Activez l'analyse dans `.github/workflows/python.yml`
-
-## 📚 Documentation
-
-- [Guide d'utilisation](docs/usage.md)
-- [Architecture](docs/architecture.md)
-- [Configuration SonarQube](docs/sonar.md)
-
 ## 🤝 Contribution
 
 Les contributions sont les bienvenues ! Consultez notre [guide de contribution](CONTRIBUTING.md) pour plus de détails.
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ## 👥 Auteurs
 
