@@ -11,7 +11,9 @@ import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from generator.core.config_manager import load_settings, save_settings
 from generator.core.logger import logger
+from generator.gui.intro import show_intro_popup
 from generator.gui.layout.entity_board import EntityBoard
 from generator.gui.layout.entity_editor import EntityEditorWindow
 from generator.gui.layout.project_header import ProjectHeader
@@ -446,6 +448,11 @@ def main():
     root = create_main_window()
     apply_style(root)
     load_icons()
+    settings = load_settings()
+    if settings.get("first_launch"):
+        show_intro_popup(root)
+        settings["first_launch"] = False
+        save_settings(settings)
     setup_main_interface(root, dev_mode=True)
 
     def on_theme_change():

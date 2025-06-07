@@ -1,9 +1,40 @@
 __pycache__/
-#.env
+.env
 *.pyc
 scripts_ignored/
-#admin.md
+admin.md
 output/
 temp/*
 temp/
 logs/
+
+# Build & dist
+/build/
+/dist/
+/*.spec
+
+# PyInstaller
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Autres
+.coverage
+.coveragerc
+coverage.xml
+
+TODO.md
+hook-faker.py
+
+docker-compose.yml
+Dockerfile
+

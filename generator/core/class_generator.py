@@ -13,11 +13,40 @@ from jinja2 import Environment, FileSystemLoader
 from generator.core.logger import logger
 
 
+def to_java_boolean(value):
+    """
+    Convert a Python boolean to a Java boolean string.
+    """
+    return str(value).lower()
+
+
+def get_required_imports(fields: list[dict]) -> list[str]:
+    """
+    Returns the list of Java imports needed based on field types.
+    """
+    imports = set()
+
+    for field in fields:
+        field_type = field["type"]
+        match field_type:
+            case "LocalDateTime":
+                imports.add("java.time.LocalDateTime")
+            case "LocalDate":
+                imports.add("java.time.LocalDate")
+            case "UUID":
+                imports.add("java.util.UUID")
+            case "BigDecimal":
+                imports.add("java.math.BigDecimal")
+            case _:
+                pass
+
+    return sorted(imports)
+
+
 def render_template_to_output(
     json_path: str,
     template_path: str,
     output_root: str = "output",
-    get_required_imports: bool = False,
 ):
     """
     Render a Jinja2 template to a Java file, based on the content of a JSON file.
@@ -91,6 +120,7 @@ def render_template_to_output(
         env.filters["replaceCamelCaseWithUnderscore"] = lambda s: re.sub(
             r"(?<!^)(?=[A-Z])", "_", s
         ).lower()
+        env.filters["to_java_boolean"] = to_java_boolean
 
         # Load and render the template
         logger.info("Loading template: %s", template_path)

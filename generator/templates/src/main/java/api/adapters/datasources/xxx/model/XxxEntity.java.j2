@@ -25,7 +25,7 @@ public class {{ Table }}Entity implements Serializable {
     {% if field.nullable %}
     @Nullable
     {% endif %}
-    @Column(name = "{{ field.name | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = {{ field.nullable | default(false) | lower }})
+    @Column(name = "{{ field.name | replace('Id', '_id') | replaceCamelCaseWithUnderscore() }}", nullable = {{ field.nullable | to_java_boolean }})
     // comment: {{ field.comment | default('') }}
     // testValue: {{ field.test_value | default('') }}
     private {{ field.type }} {{ field.name }};

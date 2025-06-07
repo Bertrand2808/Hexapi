@@ -48,6 +48,16 @@ pip install -r requirements.txt
 python main.py
 ```
 
+5. Générer un exécutable :
+
+```bash
+pyinstaller main.py --name HexAPIGenerator --noconsole --icon=generator/assets/icons/java.png --add-data="config;config" --add-data="generator/templates;generator/templates" --add-data="generator/gui/style.py;generator/gui" --add-data="generator/assets;generator/assets"
+```
+```bash
+pyinstaller --onedir --name="HexAPI Generator" --windowed --icon=generator/assets/icons/java.png --add-data="generator/templates;generator/templates" --add-data="generator/gui/style.py;generator/gui" --hidden-import=jinja2 --hidden-import=tkinter --hidden-import=ttkthemes --collect-all faker --additional-hooks-dir=. --clean main.py
+
+```
+
 ## 📸 Captures d'écran
 
 ![Interface principale](doc/img/img1.png)

@@ -42,26 +42,10 @@ cd hexapi
 2. Exécutez PyInstaller avec les options suivantes :
 
 ```bash
-pyinstaller --name="HexAPI Generator" ^
-            --windowed ^
-            --icon=assets/icon.ico ^
-            --add-data="generator/templates;generator/templates" ^
-            --add-data="generator/gui/style.py;generator/gui" ^
-            --hidden-import=jinja2 ^
-            --hidden-import=tkinter ^
-            --hidden-import=ttkthemes ^
-            --clean ^
-            main.py
+python setup.py build
 ```
 
-### Options expliquées
-
-- `--name` : Nom de l'exécutable
-- `--windowed` : Mode sans console
-- `--icon` : Icône de l'application
-- `--add-data` : Fichiers additionnels à inclure
-- `--hidden-import` : Modules Python à inclure
-- `--clean` : Nettoyage avant build
+Cela générera un dossier `build` avec l'exécutable.
 
 ## Structure des fichiers générés
 

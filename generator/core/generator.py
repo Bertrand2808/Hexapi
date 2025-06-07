@@ -51,12 +51,12 @@ def build_entity_data(entity_name: str, fields_raw: list[tuple]) -> dict:
 
         result["fields"].append(
             {
-                "nom": name,
+                "name": name,
                 "type": typ,
-                "isId": is_id_value,
+                "is_id": is_id_value,
                 "nullable": nullable,
                 "comment": comment,
-                "testValue": test_val,
+                "test_value": test_val,
             }
         )
 

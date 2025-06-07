@@ -47,6 +47,16 @@ class ProjectHeader(tk.Frame):
                         for entry in sub.winfo_children():
                             if isinstance(entry, ttk.Entry):
                                 entry.configure(style="CleanDark.TEntry")
+                                # Update the text color if it's not a placeholder
+                                current_text = entry.get()
+                                if current_text not in [
+                                    "Ex: My Company",
+                                    "Ex: my-project",
+                                    "Ex: com.mycompany.project",
+                                ]:
+                                    entry.configure(
+                                        foreground=theme_manager.get("TEXT_COLOR")
+                                    )
 
     def _build_ui(self):
         """

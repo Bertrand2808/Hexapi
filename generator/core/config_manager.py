@@ -15,7 +15,7 @@ def load_settings():
     Load the settings from the settings file.
     """
     if not os.path.exists(SETTINGS_FILE):
-        return {"theme": "light"}
+        return {"theme": "light", "first_launch": True}
     with open(SETTINGS_FILE, "r") as f:
         return json.load(f)
 
