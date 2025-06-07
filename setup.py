@@ -26,19 +26,18 @@ buildOptions = dict(
         ("generator/templates", "generator/templates"),
         ("generator/gui/style.py", "generator/gui"),
         ("generator/config/settings.json", "generator/config/settings.json"),
+        ("generator/config/roadmap.txt", "generator/config/roadmap.txt"),
         ("generator/assets", "generator/assets"),
         ("generator/assets/icons", "generator/assets/icons"),
         ("generator/assets/icons/java.png", "generator/assets/icons/java.png"),
         ("generator/assets/images", "generator/assets/images"),
-        ("README.md", "README.md"),
-        ("LICENSE", "LICENSE"),
-        ("build.md", "build.md"),
+        ("README_hexAPI.md", "README_hexAPI.md"),
     ],
 )
 
 setup(
     name="HexAPI Generator",
-    version="0.0.1",
+    version="0.1.0",
     description="HexAPI Generator GUI",
     options=dict(build_exe=buildOptions),
     executables=executables,

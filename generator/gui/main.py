@@ -24,7 +24,7 @@ from generator.gui.widgets import load_icons
 from generator.scripts.generate_entity import generate_all_templates
 
 # === Constants ===
-VERSION = "0.0.1"  # Version of the application
+VERSION = "0.1.0"  # Version of the application
 WINDOW_TITLE = "HexAPI Generator"
 WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 900
