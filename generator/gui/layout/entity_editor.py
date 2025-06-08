@@ -27,7 +27,7 @@ class EntityEditorWindow(tk.Toplevel):
         Initialize the entity editor window.
         """
         super().__init__(master)
-        self.title(f"Édition - {entity_name}")
+        self.title(f"Entity Editor - {entity_name}")
         self.geometry("1000x600")
         self.entity_name = entity_name
         self.on_name_change = on_name_change

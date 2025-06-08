@@ -50,7 +50,11 @@ class EntityBox(tk.Frame):
                     bg=theme_manager.get("BG_BOX"), fg=theme_manager.get("TEXT_COLOR")
                 )
             elif isinstance(widget, ttk.Button):
-                widget.configure(style="TButton")
+                # Préserver le style Red.TButton pour le bouton Delete
+                if widget.cget("text") == "Delete":
+                    widget.configure(style="Red.TButton")
+                else:
+                    widget.configure(style="TButton")
 
     def _build_ui(self):
         """
@@ -69,7 +73,7 @@ class EntityBox(tk.Frame):
 
         modify_btn = ttk.Button(
             self,
-            text="Modifier",
+            text="Edit",
             command=self._on_click,
             style="TButton",
             cursor="hand2",
@@ -79,7 +83,7 @@ class EntityBox(tk.Frame):
 
         delete_btn = ttk.Button(
             self,
-            text="Supprimer",
+            text="Delete",
             command=self._on_delete,
             style="Red.TButton",
             cursor="hand2",
