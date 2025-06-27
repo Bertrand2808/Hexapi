@@ -19,12 +19,13 @@ Un outil de génération de code intelligent qui transforme vos définitions d'e
 ## ✨ Fonctionnalités
 
 ### Interface Graphique
+
 - 🎯 Éditeur visuel d'entités avec validation en temps réel
 - 📊 Gestion des relations entre entités (OneToMany, ManyToOne, etc.)
 - 🎨 Interface moderne et intuitive
 
-
 ### Génération de Code
+
 - 📦 **Entities** : Classes métier avec annotations JPA et validation
 - 🔄 **Mappers** : Transformation automatique entre couches
 - 🌐 **Controllers** : API REST avec documentation OpenAPI
@@ -32,11 +33,13 @@ Un outil de génération de code intelligent qui transforme vos définitions d'e
 - 📚 **Ports** : Interfaces de l'architecture hexagonale
 
 ## A venir
+
 - 🧪 **Tests** : Tests unitaires et d'intégration générés
 
 ## 🚀 Démarrage rapide
 
 ### Prérequis
+
 - Python 3.8+
 - Java 11+ (pour le code généré)
 
@@ -67,17 +70,18 @@ python main.py
 3. **Générer le code** : Cliquez sur "Générer" pour créer votre architecture
 4. **Récupérer le projet** : Votre API Java est prête dans le dossier `output/`
 
-
 ## 📸 Aperçu
 
 <div align="center">
 
 ### Interface principale
+
 ![Interface principale](doc/img/img0.png)
 ![Interface principale](doc/img/img1.png)
 ![Interface principale](doc/img/img2.png)
 
 ### Éditeur d'entité
+
 ![Éditeur d'entité](doc/img/img3.png)
 ![Éditeur d'entité](doc/img/img4.png)
 
@@ -169,7 +173,7 @@ Ce projet est sous licence Apache 2.0. Voir le fichier [Licence](Licence.md) pou
 
 ## 👥 Auteur
 
-**Bertrand2808** - *Créateur et mainteneur* - [GitHub](https://github.com/Bertrand2808)
+**Bertrand2808** - _Créateur et mainteneur_ - [GitHub](https://github.com/Bertrand2808)
 
 ## 🙏 Remerciements
 
